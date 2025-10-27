@@ -1,0 +1,12 @@
+# Project exclude paths
+/.gradle/
+/app-swing/build/
+/app-swing/build/classes/java/main/
+/build/
+/domain/build/
+/domain/build/classes/java/main/
+/persistence/build/
+/persistence/build/classes/java/main/
+/service/build/
+/service/build/classes/java/main/
+.idea/

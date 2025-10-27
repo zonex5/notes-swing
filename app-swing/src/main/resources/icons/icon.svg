@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Password manager icon">
+  <!-- Solid background (no transparency) -->
+  <rect x="0" y="0" width="16" height="16" rx="2" fill="#2A2F3A"></rect>
+  <!-- Lock shackle -->
+  <path d="M5 7V6a3 3 0 1 1 6 0v1h-2V6a1 1 0 1 0-2 0v1H5z" fill="#E6ECF3"></path>
+  <!-- Lock body -->
+  <rect x="3" y="7" width="10" height="7" rx="1" fill="#F5F8FA"></rect>
+  <!-- Keyhole -->
+  <circle cx="8" cy="10" r="1" fill="#2A2F3A"></circle>
+  <rect x="7.5" y="11" width="1" height="2" rx="0.5" fill="#2A2F3A"></rect>
+  <!-- Asterisk hint for passwords -->
+  <rect x="4" y="8.5" width="1" height="1" fill="#F5F8FA" opacity="0"></rect>
+  <!-- Note: simple filled shapes for crisp rendering at 16×16 -->
+</svg>
