@@ -16,11 +16,11 @@ public class Main {
         //FlatIntelliJLaf.setup();
         FlatLightLaf.setup();
 
-        AppComponent component = DaggerAppComponent.create();
-
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("FlatLaf + IntelliJ .form");
-            MainForm form = component.buildMainWindow();
+            MainForm form = new MainForm(
+                    new MainPresenter()
+            );
             //MainPresenter presenter = injector.getInstance(MainPresenter.class);
             //form.setPresenter(presenter);
             //presenter.setView(form);

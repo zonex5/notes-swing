@@ -1,7 +1,6 @@
 package xyz.toway.notes.persistence.entity;
 
 import lombok.Data;
-import lombok.Getter;
 import org.dizitart.no2.repository.annotations.Id;
 
 import java.time.Instant;

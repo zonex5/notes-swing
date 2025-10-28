@@ -1,18 +1,18 @@
-plugins { id "java" }
+plugins {
+    id "io.freefair.lombok" version "9.0.0" apply false
+}
+
+allprojects {
+    repositories { mavenCentral() }
+}
 
 subprojects {
     apply plugin: "java"
-
-    repositories { mavenCentral() }
+    apply plugin: "io.freefair.lombok"
 
     java {
         modularity.inferModulePath = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    dependencies {
-        compileOnly "org.projectlombok:lombok:1.18.42"
-        annotationProcessor "org.projectlombok:1.18.42"
     }
 }

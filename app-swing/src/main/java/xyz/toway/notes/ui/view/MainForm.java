@@ -3,7 +3,6 @@ package xyz.toway.notes.ui.view;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
-import jakarta.inject.Inject;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.ListItem;
 
@@ -18,7 +17,6 @@ public class MainForm implements GeneralView<MainPresenter> {
     private JPanel mainPanel;
     private JPanel leftPanel;
 
-    @Inject
     public MainForm(MainPresenter presenter) {
         this.presenter = presenter;
         presenter.setView(this);
