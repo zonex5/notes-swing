@@ -1,8 +1,8 @@
 package xyz.toway.notes.ui;
 
+import dagger.Component;
 import dagger.Module;
 import dagger.Provides;
-import dagger.Component;
 import jakarta.inject.Singleton;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.MainForm;

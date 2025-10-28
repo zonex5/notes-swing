@@ -5,5 +5,5 @@ module com.example.notes.app {
     requires dagger;
     requires com.formdev.flatlaf;
     requires com.formdev.flatlaf.extras;
-    requires jakarta.inject;
+    requires jakarta.inject; requires xyz.toway.notes.persistence;
 }

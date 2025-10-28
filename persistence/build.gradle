@@ -2,5 +2,5 @@ plugins { id "java-library" }
 
 dependencies {
     api project(":domain")
-    implementation "com.h2database:h2:2.3.232"
+    implementation 'org.dizitart:nitrite:4.3.2'
 }

@@ -12,6 +12,7 @@ subprojects {
     }
 
     dependencies {
-
+        compileOnly "org.projectlombok:lombok:1.18.42"
+        annotationProcessor "org.projectlombok:1.18.42"
     }
 }

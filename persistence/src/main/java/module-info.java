@@ -1,7 +1,8 @@
-module com.example.notes.persistence {
+module xyz.toway.notes.persistence {
+    exports xyz.toway.notes.persistence;
     requires com.example.notes.domain;
     requires java.sql;
-    requires com.h2database;
-
-    exports com.example.notes.persistence;
+    requires static lombok;
+    requires org.dizitart.no2;
+    requires xyz.toway.notes.persistence;
 }
