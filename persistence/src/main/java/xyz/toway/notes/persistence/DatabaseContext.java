@@ -3,6 +3,7 @@ package xyz.toway.notes.persistence;
 import lombok.Getter;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.mvstore.MVStoreModule;
+import xyz.toway.notes.persistence.repository.NoteRepository;
 
 public class DatabaseContext implements DatabaseManager {
 
@@ -19,5 +20,10 @@ public class DatabaseContext implements DatabaseManager {
         db = Nitrite.builder()
                 .loadModule(storeModule)
                 .openOrCreate(user, password);
+    }
+
+    @Override
+    public NoteRepository getNoteRepository() {
+        return null;
     }
 }

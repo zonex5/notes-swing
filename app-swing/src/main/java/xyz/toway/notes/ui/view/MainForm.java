@@ -93,6 +93,10 @@ public class MainForm implements GeneralView<MainPresenter> {
         helpMenu.add(new JMenuItem("About"));
         menuBar.add(helpMenu);
 
+        menuBar.add(Box.createHorizontalGlue());
+
+        menuBar.add(getToolbar());
+
         return menuBar;
     }
 
@@ -105,11 +109,7 @@ public class MainForm implements GeneralView<MainPresenter> {
         forwardButton.setToolTipText("Forward");
         forwardButton.setIcon(new FlatSVGIcon("icons/copy.svg"));
         toolBar.add(forwardButton);
-        toolBar.addSeparator();
-
-        toolBar.add(Box.createHorizontalGlue());
-        toolBar.add(getSearchField());
-
+        //toolBar.addSeparator();
         return toolBar;
     }
 

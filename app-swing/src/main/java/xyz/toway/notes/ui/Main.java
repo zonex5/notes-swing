@@ -28,7 +28,7 @@ public class Main {
             frame.setContentPane(form.$$$getRootComponent$$$());
             frame.setJMenuBar(form.getMenuBar());
 
-            frame.add(form.getToolbar(), BorderLayout.NORTH);
+            //frame.add(form.getToolbar(), BorderLayout.NORTH);
 
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setPreferredSize(new Dimension(800, 500));
