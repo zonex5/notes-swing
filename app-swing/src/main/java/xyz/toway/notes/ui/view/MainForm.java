@@ -3,11 +3,16 @@ package xyz.toway.notes.ui.view;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.*;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.ListItem;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class MainForm implements GeneralView<MainPresenter> {
@@ -69,8 +74,9 @@ public class MainForm implements GeneralView<MainPresenter> {
 
         // Main content
         JPanel content = new JPanel(new BorderLayout());
-        content.add(new JLabel("Main content area", SwingConstants.CENTER), BorderLayout.CENTER);
-        content.setMinimumSize(new Dimension(400, 0));
+        //content.add(new JLabel("Main content area", SwingConstants.CENTER), BorderLayout.CENTER);
+        //content.setMinimumSize(new Dimension(400, 0));
+        content.add(getContentPane(), BorderLayout.CENTER);
 
         // Split pane
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, content);
@@ -79,6 +85,107 @@ public class MainForm implements GeneralView<MainPresenter> {
         split.setContinuousLayout(true);         // live resize
 
         mainPanel.add(split, BorderLayout.CENTER);
+    }
+
+    private static void installSearchShortcuts(RSyntaxTextArea ta) {
+
+        // Ctrl+F — запрос строки для поиска
+        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK), "findPrompt");
+        ta.getActionMap().put("findPrompt", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String q = JOptionPane.showInputDialog(ta, "Find:", "Find", JOptionPane.PLAIN_MESSAGE);
+                if (q == null || q.isEmpty()) return;
+
+                SearchContext ctx = new SearchContext();
+                ctx.setSearchFor(q);
+                ctx.setMatchCase(false);
+                ctx.setWholeWord(false);
+                ctx.setRegularExpression(false);
+                ctx.setSearchForward(true);
+
+                SearchResult r = SearchEngine.find(ta, ctx);
+                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
+            }
+        });
+
+        // F3 — найти следующее
+        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0), "findNext");
+        ta.getActionMap().put("findNext", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SearchContext ctx = new SearchContext();
+                String sel = ta.getSelectedText();
+                if (sel != null && !sel.isEmpty()) ctx.setSearchFor(sel);
+                ctx.setSearchForward(true);
+
+                SearchResult r = SearchEngine.find(ta, ctx);
+                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
+            }
+        });
+
+        // Shift+F3 — найти предыдущее
+        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, KeyEvent.SHIFT_DOWN_MASK), "findPrev");
+        ta.getActionMap().put("findPrev", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SearchContext ctx = new SearchContext();
+                String sel = ta.getSelectedText();
+                if (sel != null && !sel.isEmpty()) ctx.setSearchFor(sel);
+                ctx.setSearchForward(false);
+
+                SearchResult r = SearchEngine.find(ta, ctx);
+                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
+            }
+        });
+
+        // Ctrl+H — простая замена
+        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.CTRL_DOWN_MASK), "replacePrompt");
+        ta.getActionMap().put("replacePrompt", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 6, 6));
+                JTextField find = new JTextField();
+                JTextField repl = new JTextField();
+                panel.add(new JLabel("Find:"));
+                panel.add(find);
+                panel.add(new JLabel("Replace with:"));
+                panel.add(repl);
+                int ok = JOptionPane.showConfirmDialog(ta, panel, "Replace", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if (ok != JOptionPane.OK_OPTION) return;
+
+                SearchContext ctx = new SearchContext();
+                ctx.setSearchFor(find.getText());
+                ctx.setReplaceWith(repl.getText());
+                ctx.setSearchForward(true);
+
+                SearchResult r = SearchEngine.replace(ta, ctx);
+                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
+            }
+        });
+    }
+
+    public Component getContentPane() {
+        RSyntaxTextArea textArea = new RSyntaxTextArea(30, 100);
+        textArea.setCodeFoldingEnabled(false);
+        textArea.setTabsEmulated(true);
+        textArea.setTabSize(4);
+        textArea.setAntiAliasingEnabled(true);
+        textArea.setMarkOccurrences(true);
+        textArea.setCloseCurlyBraces(true);
+        textArea.setAnimateBracketMatching(true);
+        textArea.setAutoIndentEnabled(true);
+
+        // Choose a language syntax
+        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+
+        // Wrap into scroll pane with line numbers
+        RTextScrollPane sp = new RTextScrollPane(textArea);
+        sp.setFoldIndicatorEnabled(true);
+
+        installSearchShortcuts(textArea);
+
+        return sp;
     }
 
     public JMenuBar getMenuBar() {
