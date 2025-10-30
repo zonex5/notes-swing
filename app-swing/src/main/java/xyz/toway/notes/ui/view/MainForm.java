@@ -3,6 +3,7 @@ package xyz.toway.notes.ui.view;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
+import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.*;
@@ -16,9 +17,11 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class MainForm implements GeneralView<MainPresenter> {
 
@@ -75,13 +78,34 @@ public class MainForm implements GeneralView<MainPresenter> {
         split.setResizeWeight(0);                // give extra space to right side when resizing
         split.setContinuousLayout(true);         // live resize
 
-        //mainPanel.add(split, BorderLayout.CENTER);
+        //UIManager.put("TabbedPane.closeForeground", UIManager.getColor("TabbedPane.background"));
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Super document", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
         tabbedPane.addTab("My document", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
         tabbedPane.addTab("huieta.txt", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
+
+        UIManager.put("TabbedPane.closeHoverForeground", UIManager.getColor("TabbedPane.background"));
+        UIManager.put("TabbedPane.closeCrossPlainSize", 6);
+        UIManager.put("TabbedPane.closeArc", 999);
+        UIManager.put("TabbedPane.closeCrossFilledSize", 5.5f);
+        UIManager.put("TabbedPane.closeIcon", new FlatTabbedPaneCloseIcon());
+        tabbedPane.updateUI();
+
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
+        //tabbedPane.putClientProperty( FlatClientProperties.TABBED_PANE_HIDE_TAB_AREA_WITH_ONE_TAB, true);
+
+
+        tabbedPane.putClientProperty(
+                FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
+                (BiConsumer<JTabbedPane, Integer>) (tp, index) -> {
+                    tp.removeTabAt(index);
+                    System.out.println("Closed tab at index: " + index);
+                }
+        );
+
     }
 
     private static void installSearchShortcuts(RSyntaxTextArea ta) {

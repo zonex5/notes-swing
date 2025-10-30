@@ -18,7 +18,7 @@ public class Main {
         //FlatIntelliJLaf.setup();
         FlatLightLaf.setup();
 
-        showIcons();
+        //showIcons();
 
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("My Super Notes");
