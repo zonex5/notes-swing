@@ -1,11 +1,16 @@
 package xyz.toway.notes.persistence;
 
+import lombok.NonNull;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.collection.Document;
 import org.dizitart.no2.collection.NitriteCollection;
 import org.dizitart.no2.mvstore.MVStoreModule;
 import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.domain.port.SettingsRepository;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class NtDatabaseRepository implements DatabaseRepository {
 
@@ -18,9 +23,11 @@ public class NtDatabaseRepository implements DatabaseRepository {
     }
 
     @Override
-    public void initDatabase(String path, String user, String pass) {
+    public void initDatabase(@NonNull String path, @NonNull String user, @NonNull String pass) {
         MVStoreModule store = MVStoreModule.withConfig()
                 .filePath(path)
+                .encryptionKey(pass.toCharArray())
+                .compress(true)
                 .build();
 
         database = Nitrite.builder()
@@ -32,6 +39,20 @@ public class NtDatabaseRepository implements DatabaseRepository {
     public void closeDatabase() {
         if (database != null && !database.isClosed()) {
             database.close();
+        }
+    }
+
+    @Override
+    public boolean databaseFileIsValid(String path) {
+        if (path == null) return false;
+        try (FileInputStream in = new FileInputStream(path)) {
+            byte[] buf = new byte[32];
+            int n = in.read(buf);
+            if (n <= 0) return false;
+            String header = new String(buf, 0, n, StandardCharsets.ISO_8859_1);
+            return header.startsWith("H2encrypt");
+        } catch (IOException e) {
+            return false;
         }
     }
 

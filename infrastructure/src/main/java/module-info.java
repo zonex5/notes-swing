@@ -7,6 +7,8 @@ module xyz.toway.notes.infrastructure {
     requires org.dizitart.no2.mvstore;
     requires org.slf4j;
 
+    requires static lombok;
+
     exports xyz.toway.notes.settings;
     exports xyz.toway.notes.persistence;
 

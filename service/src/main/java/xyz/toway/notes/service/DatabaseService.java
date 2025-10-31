@@ -15,7 +15,11 @@ public class DatabaseService {
     }
 
     public void closeDatabase() {
-        // Implement database closing logic if needed
+        databaseRepository.closeDatabase();
+    }
+
+    public boolean databaseFileIsValid(String path) {
+        return databaseRepository.databaseFileIsValid(path);
     }
 
     public void test() {
