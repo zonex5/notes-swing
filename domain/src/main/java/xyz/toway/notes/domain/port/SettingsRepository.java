@@ -1,5 +1,10 @@
 package xyz.toway.notes.domain.port;
 
+import java.util.Optional;
+
 public interface SettingsRepository {
-    String dbFilePath();
+
+    Optional<String> getDatabaseFilePath();
+
+    void setDatabaseFilePath(String path);
 }

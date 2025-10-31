@@ -1,4 +1,18 @@
+import xyz.toway.notes.settings.PreferencesSettingsRepositoryFactory;
+
 module xyz.toway.notes.infrastructure {
     requires xyz.toway.notes.domain;
-    exports xyz.toway.settings;
+    requires java.prefs;
+    requires org.dizitart.no2;
+    requires org.dizitart.no2.mvstore;
+    requires org.slf4j;
+
+    exports xyz.toway.notes.settings;
+    exports xyz.toway.notes.persistence;
+
+    provides xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory
+            with xyz.toway.notes.persistence.NtDatabaseRepositoryFactory;
+
+    provides xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory
+            with PreferencesSettingsRepositoryFactory;
 }
