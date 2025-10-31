@@ -1,2 +1,2 @@
 rootProject.name = "notes"
-include "app-swing", "domain", "service", "persistence"
+include "app-swing", "domain", "service", "infrastructure"
