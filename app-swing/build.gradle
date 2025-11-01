@@ -4,9 +4,6 @@ dependencies {
     implementation project(":service")
     implementation project(":domain")
 
-    // just for module-info.java to include providers
-    implementation project(":infrastructure")
-
     implementation 'com.formdev:flatlaf:3.6.2'
     implementation 'com.formdev:flatlaf-extras:3.6.2'
     implementation "com.github.weisj:jsvg:2.0.0"

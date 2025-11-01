@@ -15,6 +15,7 @@ import xyz.toway.notes.ui.view.MainForm;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,8 +40,18 @@ public class Main {
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            frame.setIconImages(List.of(new FlatSVGIcon("icons/icon.svg", 16, 16).getImage()));
+            frame.setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
         });
+    }
+
+    public static FlatSVGIcon icon(String path, int w, int h) {
+        return icon(path).derive(w, h);
+    }
+
+    public static FlatSVGIcon icon(String path) {
+        URL url = Main.class.getResource(path);
+        if (url == null) throw new IllegalStateException("Icon not found: " + path);
+        return new FlatSVGIcon(url);
     }
 
     private static ApplicationContext setDI() {

@@ -1,5 +1,3 @@
-import xyz.toway.notes.settings.PreferencesSettingsRepositoryFactory;
-
 module xyz.toway.notes.infrastructure {
     requires xyz.toway.notes.domain;
     requires java.prefs;
@@ -16,5 +14,5 @@ module xyz.toway.notes.infrastructure {
             with xyz.toway.notes.persistence.NtDatabaseRepositoryFactory;
 
     provides xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory
-            with PreferencesSettingsRepositoryFactory;
+            with xyz.toway.notes.settings.PreferencesSettingsRepositoryFactory;
 }

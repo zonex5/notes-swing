@@ -9,8 +9,6 @@ module xyz.toway.notes.ui {
 
     requires static lombok;
 
-    uses xyz.toway.notes.domain.port.DatabaseRepository;
-    uses xyz.toway.notes.domain.port.SettingsRepository;
     uses xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
     uses xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
 }

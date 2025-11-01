@@ -23,6 +23,8 @@ import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import static xyz.toway.notes.ui.Main.icon;
+
 public class MainForm implements GeneralView<MainPresenter> {
 
     private final MainPresenter presenter;
@@ -68,8 +70,6 @@ public class MainForm implements GeneralView<MainPresenter> {
 
         // Main content
         JPanel content = new JPanel(new BorderLayout());
-        //content.add(new JLabel("Main content area", SwingConstants.CENTER), BorderLayout.CENTER);
-        //content.setMinimumSize(new Dimension(400, 0));
         content.add(getContentPane(), BorderLayout.CENTER);
 
         // Split pane
@@ -81,9 +81,9 @@ public class MainForm implements GeneralView<MainPresenter> {
         //UIManager.put("TabbedPane.closeForeground", UIManager.getColor("TabbedPane.background"));
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Super document", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
-        tabbedPane.addTab("My document", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
-        tabbedPane.addTab("huieta.txt", new FlatSVGIcon("icons/doc.svg", 16, 16), getContentPane());
+        tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
+        tabbedPane.addTab("My document", icon("/icons/doc.svg", 16, 16), getContentPane());
+        tabbedPane.addTab("huieta.txt", icon("/icons/doc.svg", 16, 16), getContentPane());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
         UIManager.put("TabbedPane.closeHoverForeground", UIManager.getColor("TabbedPane.background"));
@@ -97,7 +97,6 @@ public class MainForm implements GeneralView<MainPresenter> {
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
         //tabbedPane.putClientProperty( FlatClientProperties.TABBED_PANE_HIDE_TAB_AREA_WITH_ONE_TAB, true);
 
-
         tabbedPane.putClientProperty(
                 FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
                 (BiConsumer<JTabbedPane, Integer>) (tp, index) -> {
@@ -105,7 +104,6 @@ public class MainForm implements GeneralView<MainPresenter> {
                     System.out.println("Closed tab at index: " + index);
                 }
         );
-
     }
 
     private static void installSearchShortcuts(RSyntaxTextArea ta) {
@@ -217,7 +215,7 @@ public class MainForm implements GeneralView<MainPresenter> {
         Gutter gutter = sp.getGutter();
         sp.setFoldIndicatorEnabled(false);
         gutter.setBookmarkingEnabled(true);
-        gutter.setBookmarkIcon(new FlatSVGIcon("icons/bookmark.svg", 14, 14));
+        gutter.setBookmarkIcon(icon("/icons/bookmark.svg", 14, 14));
 
         gutter.setBackground(UIManager.getColor("Panel.background"));
         gutter.setBorderColor(UIManager.getColor("Separator.foreground"));
@@ -270,23 +268,23 @@ public class MainForm implements GeneralView<MainPresenter> {
         toolBar.setMargin(new Insets(3, 3, 3, 3));
 
         toolBar.addSeparator();
-        toolBar.add(createButton("New", "icons/new.svg", () -> {
+        toolBar.add(createButton("New", "/icons/new.svg", () -> {
             System.out.println("New action");
         }));
-        toolBar.add(createButton("Open", "icons/open.svg", () -> {
+        toolBar.add(createButton("Open", "/icons/open.svg", () -> {
             System.out.println("Open action");
         }));
-        toolBar.add(createButton("Save", "icons/save.svg", () -> {
+        toolBar.add(createButton("Save", "/icons/save.svg", () -> {
             System.out.println("Save action");
         }));
-        toolBar.add(createButton("Export", "icons/download.svg", () -> {
+        toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
         }));
         toolBar.addSeparator();
-        //toolBar.add(createButton("Copy", "icons/copy.svg", () -> {
+        //toolBar.add(createButton("Copy", "/icons/copy.svg", () -> {
         //    System.out.println("Copy action");
         //}));
-        //toolBar.add(createButton("Paste", "icons/paste.svg", () -> {
+        //toolBar.add(createButton("Paste", "/icons/paste.svg", () -> {
         //    System.out.println("Paste action");
         //}));
 
@@ -297,7 +295,7 @@ public class MainForm implements GeneralView<MainPresenter> {
     private JButton createButton(String tooltip, String iconPath, Runnable action) {
         JButton button = new JButton();
         button.setToolTipText(tooltip);
-        button.setIcon(new FlatSVGIcon(iconPath));
+        button.setIcon(icon(iconPath));
         button.addActionListener(e -> action.run());
         return button;
     }
