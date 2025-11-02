@@ -16,10 +16,8 @@ import xyz.toway.notes.ui.view.MainForm;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.ServiceLoader;
 
 public class Main {
     public static void main(String[] args) {
@@ -45,6 +43,9 @@ public class Main {
             frame.setVisible(true);
             frame.setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
         });
+
+        //showIcons();
+        //showColors();
     }
 
     public static FlatSVGIcon icon(String path, int w, int h) {
@@ -85,5 +86,25 @@ public class Main {
 
         Collections.sort(icons);
         icons.forEach(System.out::println);
+    }
+
+    private static void showColors() {
+        UIDefaults defaults = UIManager.getDefaults();
+        Enumeration<Object> keys = defaults.keys();
+
+        System.out.println("=== FlatLaf Theme Colors ===");
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = defaults.get(key);
+
+            // Print only color values
+            if (value instanceof Color color) {
+                System.out.printf("%s = #%02x%02x%02x%n",
+                        key,
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue());
+            }
+        }
     }
 }

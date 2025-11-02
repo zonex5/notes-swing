@@ -7,4 +7,8 @@ public interface SettingsRepository {
     Optional<String> getDatabaseFilePath();
 
     void setDatabaseFilePath(String path);
+
+    boolean getStatusBarVisible();
+
+    void setStatusBarVisible(boolean visible);
 }

@@ -8,6 +8,7 @@ import java.util.prefs.Preferences;
 public class PreferencesSettingsRepository implements SettingsRepository {
 
     private static final String DB_FILE_PATH = "database-file-path";
+    private static final String STATUS_BAR_VISIBLE = "status-bar-visible";
 
     private final Preferences prefs = Preferences.userRoot().node("mysupernotes");
 
@@ -23,5 +24,15 @@ public class PreferencesSettingsRepository implements SettingsRepository {
     @Override
     public void setDatabaseFilePath(String path) {
         prefs.put(DB_FILE_PATH, path);
+    }
+
+    @Override
+    public boolean getStatusBarVisible() {
+        return prefs.getBoolean(STATUS_BAR_VISIBLE, true);
+    }
+
+    @Override
+    public void setStatusBarVisible(boolean visible) {
+        prefs.putBoolean(STATUS_BAR_VISIBLE, visible);
     }
 }

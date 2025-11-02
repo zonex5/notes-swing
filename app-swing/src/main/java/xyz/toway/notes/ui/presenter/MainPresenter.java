@@ -6,6 +6,8 @@ import xyz.toway.notes.service.SettingsService;
 import xyz.toway.notes.ui.ApplicationContext;
 import xyz.toway.notes.ui.view.MainForm;
 
+import javax.swing.*;
+
 public class MainPresenter implements GeneralPresenter<MainForm> {
     private static final String APP_USER = "app_user";
 
@@ -42,21 +44,26 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
                 .ifPresent(this::openDatabase);
     }
 
+    public void menuItemStatusBar(boolean visible) {
+        settingsService.getSettings().setStatusBarVisible(visible);
+    }
+
     private void openDatabase(String path) {
+
         try {
             if (!databaseService.databaseFileIsValid(path)) {
                 throw new Exception();
             }
             var password = view.askForPassword();
             if (password == null) {
-                view.showNotification("Open database cancelled.");
+                view.showNotification("Open notes file cancelled.", UIManager.getColor("TitlePane.inactiveForeground"));
                 return;
             }
             context.getDatabaseService().initDatabase(path, APP_USER, password);
-            view.showNotification("Database file opened: " + path);
+            view.showNotification("Notes file opened: " + path);
         } catch (Exception e) {
-            view.showErrorMessage("Failed to open database file: " + path);
-            return;
+            view.showErrorMessage("Failed to open file: " + path);
+            view.showNotification("Failed to open file: " + path, UIManager.getColor("Objects.RedStatus"));
         }
     }
 }

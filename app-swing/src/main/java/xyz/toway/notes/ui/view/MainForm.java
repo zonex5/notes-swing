@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static xyz.toway.notes.ui.Main.icon;
@@ -212,12 +213,20 @@ public class MainForm implements GeneralView<MainPresenter> {
         fileMenu.add(new JMenuItem("Exit"));
         menuBar.add(fileMenu);
 
+        JMenu viewMenu = new JMenu("View");
+        JCheckBoxMenuItem statusBarItem = new JCheckBoxMenuItem("Show Status Bar");
+        statusBarItem.addActionListener(e -> {
+            presenter.menuItemStatusBar(statusBarItem.isSelected());
+            showStatusBar(statusBarItem.isSelected());
+        });
+        viewMenu.add(statusBarItem);
+        menuBar.add(viewMenu);
+
         JMenu helpMenu = new JMenu("Help");
         helpMenu.add(new JMenuItem("About"));
         menuBar.add(helpMenu);
 
         menuBar.add(Box.createHorizontalGlue());
-
         menuBar.add(getToolbar());
 
         return menuBar;
@@ -252,6 +261,12 @@ public class MainForm implements GeneralView<MainPresenter> {
         return toolBar;
     }
 
+    private void showStatusBar(boolean visible) {
+        statusBar.setVisible(visible);
+        mainPanel.revalidate();
+        mainPanel.repaint();
+    }
+
     // create button with action
     private JButton createButton(String tooltip, String iconPath, Runnable action) {
         JButton button = new JButton();
@@ -282,22 +297,15 @@ public class MainForm implements GeneralView<MainPresenter> {
         return searchField;
     }
 
-    private JList<ListItem> getSidebarMenuList() {
-        java.util.List<ListItem> items = List.of(
-                new ListItem("Favorites", UIManager.getIcon("FileView.fileIcon")),
-                new ListItem("Recycle Bin", UIManager.getIcon("FileView.directoryIcon")),
-                new ListItem("Music", UIManager.getIcon("FileView.computerIcon"))
-        );
-
-        JList<ListItem> list = new JList<>(items.toArray(new ListItem[0]));
-        list.setFixedCellHeight(28);
-        list.setCellRenderer(new MainForm.IconTextCellRenderer());
-        return list;
-    }
-
     @Override
     public MainPresenter getPresenter() {
         return presenter;
+    }
+
+    @Override
+    public void applyUISettings(Map<String, Object> settings) {
+        boolean statusBarVisible = (boolean) settings.getOrDefault("statusBarVisible", Boolean.TRUE);
+        showStatusBar(statusBarVisible);
     }
 
     public String askForPassword() {
@@ -343,6 +351,11 @@ public class MainForm implements GeneralView<MainPresenter> {
 
     public void showNotification(String message) {
         statusBar.setLeftText(message);
+    }
+
+    public void showNotification(String message, Color color) {
+        String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        statusBar.setLeftText("<html><span style='color: " + hex + ";'>" + message + "</span></html>");
     }
 
     static class IconTextCellRenderer extends DefaultListCellRenderer {
