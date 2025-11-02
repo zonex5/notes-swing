@@ -78,8 +78,6 @@ public class MainForm implements GeneralView<MainPresenter> {
         split.setResizeWeight(0);                // give extra space to right side when resizing
         split.setContinuousLayout(true);         // live resize
 
-        //UIManager.put("TabbedPane.closeForeground", UIManager.getColor("TabbedPane.background"));
-
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
         tabbedPane.addTab("My document", icon("/icons/doc.svg", 16, 16), getContentPane());
@@ -104,6 +102,9 @@ public class MainForm implements GeneralView<MainPresenter> {
                     System.out.println("Closed tab at index: " + index);
                 }
         );
+
+        var pass = askForPassword();
+        System.out.println("Password entered: " + pass);
     }
 
     private static void installSearchShortcuts(RSyntaxTextArea ta) {
@@ -337,6 +338,34 @@ public class MainForm implements GeneralView<MainPresenter> {
     @Override
     public MainPresenter getPresenter() {
         return presenter;
+    }
+
+    public String askForPassword() {
+        JPasswordField passwordField = new JPasswordField();
+        JLabel label = new JLabel("Please enter your password:");
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        passwordField.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(passwordField);
+
+        int option = JOptionPane.showConfirmDialog(
+                SwingUtilities.windowForComponent(this.mainPanel),
+                panel,
+                "Password Required",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                UIManager.getIcon("OptionPane.informationIcon")
+        );
+        if (option == JOptionPane.OK_OPTION) {
+            return new String(passwordField.getPassword());
+        }
+        return null;
     }
 
     static class IconTextCellRenderer extends DefaultListCellRenderer {
