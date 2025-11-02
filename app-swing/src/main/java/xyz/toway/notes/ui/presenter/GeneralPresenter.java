@@ -7,4 +7,6 @@ public interface GeneralPresenter<V extends GeneralView<?>> {
     void setView(V view);
 
     V getView();
+
+    void init();
 }

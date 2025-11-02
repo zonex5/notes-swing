@@ -1,27 +1,27 @@
 package xyz.toway.notes.ui.presenter;
 
+import lombok.NonNull;
+import xyz.toway.notes.service.DatabaseService;
+import xyz.toway.notes.service.SettingsService;
 import xyz.toway.notes.ui.ApplicationContext;
 import xyz.toway.notes.ui.view.MainForm;
 
-
 public class MainPresenter implements GeneralPresenter<MainForm> {
+    private static final String APP_USER = "app_user";
+
+    private final DatabaseService databaseService;
+    private final SettingsService settingsService;
 
     private ApplicationContext context;
     private MainForm view;
 
-    public MainPresenter(ApplicationContext applicationContext) {
+    public MainPresenter(@NonNull ApplicationContext applicationContext) {
         this.context = applicationContext;
+        databaseService = context.getDatabaseService();
+        settingsService = context.getSettingsService();
 
         //---- tmp
         //context.getSettingsService().getSettings().setDatabaseFilePath("D:\\database.db");
-
-        var path = context.getSettingsService().getSettings().getDatabaseFilePath();
-
-        context.getDatabaseService().initDatabase(path.get(), "tolik", "ionel");
-        System.out.println("Database initialized at: " + path.get());
-        context.getDatabaseService().test();
-        System.out.println("Database test completed.");
-
     }
 
     @Override
@@ -34,8 +34,29 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         return view;
     }
 
-    public void clickedButton() {
-        // show a message dialog
-        javax.swing.JOptionPane.showMessageDialog(null, "Button clicked!");
+    @Override
+    public void init() {
+        // try to open existing database
+        context.getSettingsService().getSettings()
+                .getDatabaseFilePath()
+                .ifPresent(this::openDatabase);
+    }
+
+    private void openDatabase(String path) {
+        try {
+            if (!databaseService.databaseFileIsValid(path)) {
+                throw new Exception();
+            }
+            var password = view.askForPassword();
+            if (password == null) {
+                view.showNotification("Open database cancelled.");
+                return;
+            }
+            context.getDatabaseService().initDatabase(path, APP_USER, password);
+            view.showNotification("Database file opened: " + path);
+        } catch (Exception e) {
+            view.showErrorMessage("Failed to open database file: " + path);
+            return;
+        }
     }
 }

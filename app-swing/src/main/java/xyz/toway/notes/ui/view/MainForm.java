@@ -34,7 +34,6 @@ public class MainForm implements GeneralView<MainPresenter> {
 
     public MainForm(MainPresenter presenter) {
         this.presenter = presenter;
-        presenter.setView(this);
         createUIComponents();
     }
 
@@ -102,9 +101,6 @@ public class MainForm implements GeneralView<MainPresenter> {
                     System.out.println("Closed tab at index: " + index);
                 }
         );
-
-        var pass = askForPassword();
-        System.out.println("Password entered: " + pass);
     }
 
     private static void installSearchShortcuts(RSyntaxTextArea ta) {
@@ -366,6 +362,23 @@ public class MainForm implements GeneralView<MainPresenter> {
             return new String(passwordField.getPassword());
         }
         return null;
+    }
+
+    public void showErrorMessage(String message) {
+        JOptionPane.showMessageDialog(
+                SwingUtilities.windowForComponent(this.mainPanel),
+                message,
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+
+        //errorOptionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
+        //errorOptionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
+        //errorOptionPane.setMessage("Your PC ran into a problem. Buy a new one.");
+    }
+
+    public void showNotification(String message) {
+
     }
 
     static class IconTextCellRenderer extends DefaultListCellRenderer {

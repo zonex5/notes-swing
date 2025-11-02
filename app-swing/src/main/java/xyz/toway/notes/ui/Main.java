@@ -29,9 +29,12 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("My Super Notes");
-            MainForm form = new MainForm(
-                    new MainPresenter(setDI())
-            );
+
+            var presenter = new MainPresenter(setDI());
+            MainForm form = new MainForm(presenter);
+            presenter.setView(form);
+            presenter.init();
+
             frame.setContentPane(form.getRootComponent());
             frame.setJMenuBar(form.getMenuBar());
 
