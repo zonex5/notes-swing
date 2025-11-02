@@ -6,16 +6,14 @@ import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.*;
+import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.presenter.MainPresenter;
-import xyz.toway.notes.ui.view.components.ListItem;
 import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static xyz.toway.notes.ui.Main.icon;
@@ -303,9 +301,8 @@ public class MainForm implements GeneralView<MainPresenter> {
     }
 
     @Override
-    public void applyUISettings(Map<String, Object> settings) {
-        boolean statusBarVisible = (boolean) settings.getOrDefault("statusBarVisible", Boolean.TRUE);
-        showStatusBar(statusBarVisible);
+    public void applyUISettings(StoredSettings settings) {
+        showStatusBar(settings.statusBarVisible());
     }
 
     public String askForPassword() {
@@ -356,20 +353,5 @@ public class MainForm implements GeneralView<MainPresenter> {
     public void showNotification(String message, Color color) {
         String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
         statusBar.setLeftText("<html><span style='color: " + hex + ";'>" + message + "</span></html>");
-    }
-
-    static class IconTextCellRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(
-                JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-
-            JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-            if (value instanceof ListItem item) {
-                label.setText(item.getTitle());
-                label.setIcon(item.getIcon());
-            }
-            return label;
-        }
     }
 }

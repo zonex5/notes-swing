@@ -1,5 +1,6 @@
 package xyz.toway.notes.service;
 
+import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.domain.port.SettingsRepository;
 
 public class SettingsService {
@@ -10,7 +11,14 @@ public class SettingsService {
         this.settingsRepository = settingsRepository;
     }
 
-    public SettingsRepository getSettings() {
+    public SettingsRepository getSettingsRepo() {
         return settingsRepository;
+    }
+
+    public StoredSettings getStoredSettings() {
+        return new StoredSettings(
+                settingsRepository.getDatabaseFilePath().orElse(null),
+                settingsRepository.getStatusBarVisible()
+        );
     }
 }

@@ -38,14 +38,18 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
 
     @Override
     public void init() {
+        // get settings to Map<String, Object> settings
+        var settings = context.getSettingsService().getStoredSettings();
+        view.applyUISettings(settings);
+
         // try to open existing database
-        context.getSettingsService().getSettings()
+        context.getSettingsService().getSettingsRepo()
                 .getDatabaseFilePath()
                 .ifPresent(this::openDatabase);
     }
 
     public void menuItemStatusBar(boolean visible) {
-        settingsService.getSettings().setStatusBarVisible(visible);
+        settingsService.getSettingsRepo().setStatusBarVisible(visible);
     }
 
     private void openDatabase(String path) {
