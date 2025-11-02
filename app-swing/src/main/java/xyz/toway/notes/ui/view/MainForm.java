@@ -1,7 +1,6 @@
 package xyz.toway.notes.ui.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -9,17 +8,12 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.*;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.ListItem;
+import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -30,7 +24,7 @@ public class MainForm implements GeneralView<MainPresenter> {
     private final MainPresenter presenter;
 
     private JPanel mainPanel;
-    private JPanel leftPanel;
+    private StatusBar statusBar;
 
     public MainForm(MainPresenter presenter) {
         this.presenter = presenter;
@@ -42,40 +36,7 @@ public class MainForm implements GeneralView<MainPresenter> {
     }
 
     private void createUIComponents() {
-        mainPanel = new JPanel(new BorderLayout(8, 8));
-        //leftPanel = new GroupsMenuPanel();
-        //leftPanel.setPreferredSize(new Dimension(200, 0));
-        //mainPanel.add(leftPanel, BorderLayout.WEST);
-
-        // Left sidebar
-        JPanel sidebar = new JPanel(new BorderLayout());
-        sidebar.setBackground(Color.PINK);
-        sidebar.setPreferredSize(new Dimension(200, 0));
-        sidebar.setMinimumSize(new Dimension(200, 0));
-
-        //----------
-        /*List<ListItem> items = List.of(
-                new ListItem("Document", "Last modified today", UIManager.getIcon("FileView.fileIcon")),
-                new ListItem("Picture", "JPEG image, 1.2MB", UIManager.getIcon("FileView.directoryIcon")),
-                new ListItem("Music", "MP3, 3:45 min", UIManager.getIcon("FileView.computerIcon"))
-        );
-
-        JList<ListItem> list = new JList<>(items.toArray(new ListItem[0]));
-        list.setCellRenderer(new CustomListCellRenderer());
-        list.setFixedCellHeight(44); // More space for two lines*/
-
-        sidebar.add(new JScrollPane(getSidebarMenuList()));
-        //----------
-
-        // Main content
-        JPanel content = new JPanel(new BorderLayout());
-        content.add(getContentPane(), BorderLayout.CENTER);
-
-        // Split pane
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, content);
-        split.setDividerLocation(200);           // initial
-        split.setResizeWeight(0);                // give extra space to right side when resizing
-        split.setContinuousLayout(true);         // live resize
+        mainPanel = new JPanel(new BorderLayout(8, 0));
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
@@ -101,6 +62,9 @@ public class MainForm implements GeneralView<MainPresenter> {
                     System.out.println("Closed tab at index: " + index);
                 }
         );
+
+        statusBar = new StatusBar();
+        mainPanel.add(statusBar, BorderLayout.SOUTH);
     }
 
     private static void installSearchShortcuts(RSyntaxTextArea ta) {
@@ -378,7 +342,7 @@ public class MainForm implements GeneralView<MainPresenter> {
     }
 
     public void showNotification(String message) {
-
+        statusBar.setLeftText(message);
     }
 
     static class IconTextCellRenderer extends DefaultListCellRenderer {
