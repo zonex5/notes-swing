@@ -8,9 +8,9 @@ import xyz.toway.notes.service.SettingsService;
 @Getter
 public final class ApplicationContext {
 
-    private DatabaseService databaseService;
-    private NoteService noteService;
-    private SettingsService settingsService;
+    private final DatabaseService databaseService;
+    private final NoteService noteService;
+    private final SettingsService settingsService;
 
     public ApplicationContext(DatabaseService databaseService, NoteService noteService, SettingsService settingsService) {
         this.databaseService = databaseService;

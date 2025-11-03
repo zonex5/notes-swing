@@ -1,4 +1,4 @@
-package xyz.toway.notes.settings;
+package xyz.toway.notes.infrastructure.settings;
 
 import xyz.toway.notes.domain.port.SettingsRepository;
 import xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;

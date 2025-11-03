@@ -6,13 +6,21 @@ module xyz.toway.notes.infrastructure {
     requires org.slf4j;
 
     requires static lombok;
+    requires org.dizitart.no2.jackson;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.core;
+    requires com.fasterxml.jackson.annotation;
 
-    exports xyz.toway.notes.settings;
-    exports xyz.toway.notes.persistence;
+    exports xyz.toway.notes.infrastructure.settings;
+    exports xyz.toway.notes.infrastructure.persistence.factory;
+    exports xyz.toway.notes.infrastructure.persistence.repository;
 
     provides xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory
-            with xyz.toway.notes.persistence.NtDatabaseRepositoryFactory;
+            with xyz.toway.notes.infrastructure.persistence.factory.NtDatabaseRepositoryFactory;
 
     provides xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory
-            with xyz.toway.notes.settings.PreferencesSettingsRepositoryFactory;
+            with xyz.toway.notes.infrastructure.settings.PreferencesSettingsRepositoryFactory;
+
+    provides xyz.toway.notes.domain.port.factory.NoteRepositoryFactory
+            with xyz.toway.notes.infrastructure.persistence.factory.NtRepositoryFactory;
 }

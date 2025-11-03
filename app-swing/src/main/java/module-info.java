@@ -1,3 +1,5 @@
+import xyz.toway.notes.domain.port.factory.NoteRepositoryFactory;
+
 module xyz.toway.notes.ui {
     requires java.desktop;
     requires com.formdev.flatlaf;
@@ -11,4 +13,5 @@ module xyz.toway.notes.ui {
 
     uses xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
     uses xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
+    uses NoteRepositoryFactory;
 }

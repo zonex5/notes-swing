@@ -1,9 +1,11 @@
-package xyz.toway.notes.persistence;
+package xyz.toway.notes.infrastructure.persistence.repository;
 
+import lombok.Getter;
 import lombok.NonNull;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.collection.Document;
 import org.dizitart.no2.collection.NitriteCollection;
+import org.dizitart.no2.mapper.jackson.JacksonMapperModule;
 import org.dizitart.no2.mvstore.MVStoreModule;
 import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.domain.port.SettingsRepository;
@@ -16,6 +18,7 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
     private final SettingsRepository settingsRepository;
 
+    @Getter
     private Nitrite database;
 
     public NtDatabaseRepository(SettingsRepository settingsRepository) {
@@ -32,6 +35,7 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
         database = Nitrite.builder()
                 .loadModule(store)
+                .loadModule(new JacksonMapperModule())
                 .openOrCreate();
         //.openOrCreate(user, pass); //todo
     }

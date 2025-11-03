@@ -48,6 +48,8 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
 
         //----------
         context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
+
+        context.getNoteService().test();
     }
 
     public void menuItemStatusBar(boolean visible) {

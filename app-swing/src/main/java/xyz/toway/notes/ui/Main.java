@@ -3,8 +3,10 @@ package xyz.toway.notes.ui;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.domain.port.SettingsRepository;
+import xyz.toway.notes.domain.port.factory.NoteRepositoryFactory;
 import xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
 import xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
 import xyz.toway.notes.service.DatabaseService;
@@ -54,9 +56,13 @@ public class Main {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No provider found"))
                 .create(settingsRepository);
+        NoteRepository noteRepository = ServiceLoader.load(NoteRepositoryFactory.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No provider found"))
+                .create(databaseRepository);
         return new ApplicationContext(
                 new DatabaseService(databaseRepository),
-                new NoteService(databaseRepository),
+                new NoteService(noteRepository),
                 new SettingsService(settingsRepository)
         );
     }
