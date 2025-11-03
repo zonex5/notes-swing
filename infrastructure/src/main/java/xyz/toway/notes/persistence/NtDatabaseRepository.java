@@ -32,7 +32,8 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
         database = Nitrite.builder()
                 .loadModule(store)
-                .openOrCreate(user, pass);
+                .openOrCreate();
+        //.openOrCreate(user, pass); //todo
     }
 
     @Override

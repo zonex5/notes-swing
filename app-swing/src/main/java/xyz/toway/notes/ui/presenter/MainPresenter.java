@@ -43,9 +43,11 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         view.applyUISettings(settings);
 
         // try to open existing database
-        context.getSettingsService().getSettingsRepo()
-                .getDatabaseFilePath()
+        settings.databaseFilePath()
                 .ifPresent(this::openDatabase);
+
+        //----------
+        context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
     }
 
     public void menuItemStatusBar(boolean visible) {
@@ -58,12 +60,13 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
             if (!databaseService.databaseFileIsValid(path)) {
                 throw new Exception();
             }
-            var password = view.askForPassword();
-            if (password == null) {
-                view.showNotification("Open notes file cancelled.", UIManager.getColor("TitlePane.inactiveForeground"));
-                return;
-            }
-            context.getDatabaseService().initDatabase(path, APP_USER, password);
+            // todo: ask for password dialog
+            //var password = view.askForPassword();
+            //if (password == null) {
+            //    view.showNotification("Open notes file cancelled.", UIManager.getColor("TitlePane.inactiveForeground"));
+            //    return;
+            //}
+            context.getDatabaseService().initDatabase(path, APP_USER, "test"); //todo password
             view.showNotification("Notes file opened: " + path);
         } catch (Exception e) {
             view.showErrorMessage("Failed to open file: " + path);

@@ -1,7 +1,9 @@
 package xyz.toway.notes.domain.model;
 
+import java.util.Optional;
+
 public record StoredSettings(
-        String databaseFilePath,
+        Optional<String> databaseFilePath,
         boolean statusBarVisible
 ) {
 }

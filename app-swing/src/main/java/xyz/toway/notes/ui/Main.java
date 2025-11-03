@@ -32,23 +32,7 @@ public class Main {
             MainForm form = new MainForm(presenter);
             presenter.setView(form);
             presenter.init();
-
-            frame.setPreferredSize(new Dimension(900, 600));
-            frame.pack();
-
-/*            frame.setContentPane(form.getRootComponent());
-            frame.setJMenuBar(form.getMenuBar());
-
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setPreferredSize(new Dimension(900, 600));
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-            frame.setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));*/
         });
-
-        //showIcons();
-        //showColors();
     }
 
     public static FlatSVGIcon icon(String path, int w, int h) {

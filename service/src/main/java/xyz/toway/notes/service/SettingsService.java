@@ -17,7 +17,7 @@ public class SettingsService {
 
     public StoredSettings getStoredSettings() {
         return new StoredSettings(
-                settingsRepository.getDatabaseFilePath().orElse(null),
+                settingsRepository.getDatabaseFilePath(),
                 settingsRepository.getStatusBarVisible()
         );
     }
