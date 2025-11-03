@@ -14,7 +14,6 @@ public final class Mapper {
         model.setTitle(entity.getTitle());
         model.setCreatedAt(entity.getCreatedAt());
         model.setUpdatedAt(entity.getUpdatedAt());
-        model.setType(entity.getType());
         return model;
     }
 
@@ -26,7 +25,6 @@ public final class Mapper {
         entity.setTitle(model.getTitle());
         entity.setCreatedAt(model.getCreatedAt());
         entity.setUpdatedAt(model.getUpdatedAt());
-        entity.setType(model.getType());
         entity.setSyntax(model.getSyntax());
         return entity;
     }

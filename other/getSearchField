@@ -1,0 +1,20 @@
+    private JTextField getSearchField() {
+        JButton searchHistoryButton = new JButton(new FlatSearchWithHistoryIcon(true));
+        searchHistoryButton.setToolTipText("Search History");
+        searchHistoryButton.addActionListener(e -> {
+            JPopupMenu popupMenu = new JPopupMenu();
+            popupMenu.add("(empty)");
+            popupMenu.show(searchHistoryButton, 0, searchHistoryButton.getHeight());
+        });
+
+        JTextField searchField = new JTextField();
+        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_COMPONENT, searchHistoryButton);
+
+        Dimension pref = searchField.getPreferredSize();
+        pref.width = 250;
+        searchField.setPreferredSize(pref);
+        searchField.setMaximumSize(pref);
+
+        return searchField;
+    }

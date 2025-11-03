@@ -1,6 +1,7 @@
 package xyz.toway.notes.domain.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import xyz.toway.notes.domain.types.ContentType;
 import xyz.toway.notes.domain.types.SyntaxType;
@@ -8,17 +9,8 @@ import xyz.toway.notes.domain.types.SyntaxType;
 import java.time.Instant;
 
 @Data
-public class NoteModel {
-    private String id;
-    private String groupId;
-    private String title;
-    private String content;
-    private Instant createdAt;
-    private Instant updatedAt;
-
-    private ContentType type;
+@EqualsAndHashCode(callSuper = true)
+public class NoteModel extends ContentModel {
     private SyntaxType syntax;
-
-    public NoteModel() {
-    }
+    private String content;
 }

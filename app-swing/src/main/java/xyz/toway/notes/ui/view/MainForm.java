@@ -6,6 +6,8 @@ import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.*;
+import xyz.toway.notes.domain.model.ContentModel;
+import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
@@ -27,6 +29,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
     private JPanel mainPanel;
     private StatusBar statusBar;
+    private JTabbedPane tabbedPane;
 
     private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
@@ -48,10 +51,10 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     private void createUIComponents() {
         mainPanel = new JPanel(new BorderLayout(8, 0));
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
-        tabbedPane.addTab("My document", icon("/icons/doc.svg", 16, 16), getContentPane());
-        tabbedPane.addTab("huieta.txt", icon("/icons/doc.svg", 16, 16), getContentPane());
+        tabbedPane = new JTabbedPane();
+        //tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
+        //tabbedPane.addTab("My document", icon("/icons/doc.svg", 16, 16), getContentPane());
+        //tabbedPane.addTab("huieta.txt", icon("/icons/doc.svg", 16, 16), getContentPane());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
         UIManager.put("TabbedPane.closeHoverForeground", UIManager.getColor("TabbedPane.background"));
@@ -77,141 +80,48 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         mainPanel.add(statusBar, BorderLayout.SOUTH);
     }
 
-    private static void installSearchShortcuts(RSyntaxTextArea ta) {
+    public void requestNewTabCreation(ContentModel contentModel) {
+        if (contentModel instanceof NoteModel noteModel) {
+            // create text area
+            RSyntaxTextArea textArea = new RSyntaxTextArea();
+            textArea.setCodeFoldingEnabled(false);
+            textArea.setTabsEmulated(true);
+            textArea.setTabSize(4);
+            textArea.setAntiAliasingEnabled(true);
+            textArea.setMarkOccurrences(true);
+            textArea.setCloseCurlyBraces(true);
+            textArea.setAnimateBracketMatching(true);
+            textArea.setAutoIndentEnabled(true);
+            textArea.setCurrentLineHighlightColor(new Color(255, 251, 226));
 
-        // Ctrl+F
-        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK), "findPrompt");
-        ta.getActionMap().put("findPrompt", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String q = JOptionPane.showInputDialog(ta, "Find:", "Find", JOptionPane.PLAIN_MESSAGE);
-                if (q == null || q.isEmpty()) return;
+            // Wrap into scroll pane with line numbers
+            RTextScrollPane sp = new RTextScrollPane(textArea);
+            sp.setFoldIndicatorEnabled(true);
+            Gutter gutter = sp.getGutter();
+            sp.setFoldIndicatorEnabled(false);
+            gutter.setBookmarkingEnabled(true);
+            gutter.setBookmarkIcon(icon("/icons/bookmark.svg", 14, 14));
+            gutter.setBackground(UIManager.getColor("Panel.background"));
+            gutter.setBorderColor(UIManager.getColor("Separator.foreground"));
+            gutter.setLineNumbersEnabled(false);
 
-                SearchContext ctx = new SearchContext();
-                ctx.setSearchFor(q);
-                ctx.setMatchCase(false);
-                ctx.setWholeWord(false);
-                ctx.setRegularExpression(false);
-                ctx.setSearchForward(true);
+            JPanel panel = new JPanel(new BorderLayout());
+            panel.add(sp, BorderLayout.CENTER);
 
-                SearchResult r = SearchEngine.find(ta, ctx);
-                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
-            }
-        });
+            // store client data
+            panel.putClientProperty("model", contentModel);
+            panel.putClientProperty("textArea", textArea);
 
-        // F3
-        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0), "findNext");
-        ta.getActionMap().put("findNext", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SearchContext ctx = new SearchContext();
-                String sel = ta.getSelectedText();
-                if (sel != null && !sel.isEmpty()) ctx.setSearchFor(sel);
-                ctx.setSearchForward(true);
+            // create a new tab
+            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), panel);
+            tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
 
-                SearchResult r = SearchEngine.find(ta, ctx);
-                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
-            }
-        });
+            // set data
+            textArea.setText(noteModel.getContent());
 
-        // Shift+F3
-        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, KeyEvent.SHIFT_DOWN_MASK), "findPrev");
-        ta.getActionMap().put("findPrev", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SearchContext ctx = new SearchContext();
-                String sel = ta.getSelectedText();
-                if (sel != null && !sel.isEmpty()) ctx.setSearchFor(sel);
-                ctx.setSearchForward(false);
-
-                SearchResult r = SearchEngine.find(ta, ctx);
-                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
-            }
-        });
-
-        // Ctrl+H
-        ta.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.CTRL_DOWN_MASK), "replacePrompt");
-        ta.getActionMap().put("replacePrompt", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 6, 6));
-                JTextField find = new JTextField();
-                JTextField repl = new JTextField();
-                panel.add(new JLabel("Find:"));
-                panel.add(find);
-                panel.add(new JLabel("Replace with:"));
-                panel.add(repl);
-                int ok = JOptionPane.showConfirmDialog(ta, panel, "Replace", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (ok != JOptionPane.OK_OPTION) return;
-
-                SearchContext ctx = new SearchContext();
-                ctx.setSearchFor(find.getText());
-                ctx.setReplaceWith(repl.getText());
-                ctx.setSearchForward(true);
-
-                SearchResult r = SearchEngine.replace(ta, ctx);
-                if (!r.wasFound()) UIManager.getLookAndFeel().provideErrorFeedback(ta);
-            }
-        });
-    }
-
-    public RTextScrollPane getContentPane() {
-        RSyntaxTextArea textArea = new RSyntaxTextArea();
-        textArea.setCodeFoldingEnabled(false);
-        textArea.setTabsEmulated(true);
-        textArea.setTabSize(4);
-        textArea.setAntiAliasingEnabled(true);
-        textArea.setMarkOccurrences(true);
-        textArea.setCloseCurlyBraces(true);
-        textArea.setAnimateBracketMatching(true);
-        textArea.setAutoIndentEnabled(true);
-        textArea.setCurrentLineHighlightColor(new Color(255, 251, 226));
-
-        // Choose a language syntax
-        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
-
-        textArea.setText("""
-                // Sample Java code
-                public class HelloWorld {
-                    public static void main(String[] args) {
-                        System.out.println("Hello, World!");
-                    }
-                }
-                """.stripIndent());
-
-        // Wrap into scroll pane with line numbers
-        RTextScrollPane sp = new RTextScrollPane(textArea);
-        sp.setFoldIndicatorEnabled(true);
-
-        Gutter gutter = sp.getGutter();
-        sp.setFoldIndicatorEnabled(false);
-        gutter.setBookmarkingEnabled(true);
-        gutter.setBookmarkIcon(icon("/icons/bookmark.svg", 14, 14));
-
-        gutter.setBackground(UIManager.getColor("Panel.background"));
-        gutter.setBorderColor(UIManager.getColor("Separator.foreground"));
-
-        gutter.setLineNumbersEnabled(false);
-
-        try {
-            gutter.toggleBookmark(3);
-            gutter.addIconRowListener(new IconRowListener() {
-                @Override
-                public void bookmarkAdded(IconRowEvent e) {
-                    System.out.println(e);
-                }
-
-                @Override
-                public void bookmarkRemoved(IconRowEvent e) {
-                    System.out.println(e);
-                }
-            });
-        } catch (Exception ex) {
+            // set focus
+            SwingUtilities.invokeLater(textArea::requestFocusInWindow);
         }
-
-        installSearchShortcuts(textArea);
-
-        return sp;
     }
 
     public JMenuBar createMenuBar() {
@@ -250,12 +160,23 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.addSeparator();
         toolBar.add(createButton("New", "/icons/new.svg", () -> {
             System.out.println("New action");
+            presenter.toolbarButtonNew();
         }));
         toolBar.add(createButton("Open", "/icons/open.svg", () -> {
             System.out.println("Open action");
         }));
         toolBar.add(createButton("Save", "/icons/save.svg", () -> {
             System.out.println("Save action");
+            var component = (JPanel) tabbedPane.getSelectedComponent();
+            var model = component.getClientProperty("model");
+
+            if (model instanceof NoteModel noteModel) {
+                var textArea = (RSyntaxTextArea) component.getClientProperty("textArea");
+                noteModel.setContent(textArea.getText());
+                presenter.toolbarButtonSave(noteModel);
+            }
+
+            System.out.println();
         }));
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
@@ -286,27 +207,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         return button;
     }
 
-    private JTextField getSearchField() {
-        JButton searchHistoryButton = new JButton(new FlatSearchWithHistoryIcon(true));
-        searchHistoryButton.setToolTipText("Search History");
-        searchHistoryButton.addActionListener(e -> {
-            JPopupMenu popupMenu = new JPopupMenu();
-            popupMenu.add("(empty)");
-            popupMenu.show(searchHistoryButton, 0, searchHistoryButton.getHeight());
-        });
-
-        JTextField searchField = new JTextField();
-        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_COMPONENT, searchHistoryButton);
-
-        Dimension pref = searchField.getPreferredSize();
-        pref.width = 250;
-        searchField.setPreferredSize(pref);
-        searchField.setMaximumSize(pref);
-
-        return searchField;
-    }
-
     @Override
     public MainPresenter getPresenter() {
         return presenter;
@@ -318,7 +218,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         menuItems.get("statusbar").setSelected(settings.statusBarVisible());
     }
 
-    public String askForPassword() {
+    public String requestPassword() {
         JPasswordField passwordField = new JPasswordField();
         JLabel label = new JLabel("Please enter your password:");
 
