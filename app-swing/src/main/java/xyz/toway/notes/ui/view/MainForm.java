@@ -14,6 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static xyz.toway.notes.ui.Main.icon;
@@ -24,6 +26,8 @@ public class MainForm implements GeneralView<MainPresenter> {
 
     private JPanel mainPanel;
     private StatusBar statusBar;
+
+    private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
     public MainForm(MainPresenter presenter) {
         this.presenter = presenter;
@@ -219,6 +223,7 @@ public class MainForm implements GeneralView<MainPresenter> {
         });
         viewMenu.add(statusBarItem);
         menuBar.add(viewMenu);
+        menuItems.put("statusbar", statusBarItem);
 
         JMenu helpMenu = new JMenu("Help");
         helpMenu.add(new JMenuItem("About"));
@@ -303,6 +308,7 @@ public class MainForm implements GeneralView<MainPresenter> {
     @Override
     public void applyUISettings(StoredSettings settings) {
         showStatusBar(settings.statusBarVisible());
+        menuItems.get("statusbar").setSelected(settings.statusBarVisible());
     }
 
     public String askForPassword() {
@@ -340,10 +346,6 @@ public class MainForm implements GeneralView<MainPresenter> {
                 "Error",
                 JOptionPane.ERROR_MESSAGE
         );
-
-        //errorOptionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
-        //errorOptionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
-        //errorOptionPane.setMessage("Your PC ran into a problem. Buy a new one.");
     }
 
     public void showNotification(String message) {
