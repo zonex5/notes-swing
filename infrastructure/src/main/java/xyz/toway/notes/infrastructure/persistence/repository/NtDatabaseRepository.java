@@ -1,5 +1,7 @@
 package xyz.toway.notes.infrastructure.persistence.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.NonNull;
 import org.dizitart.no2.Nitrite;
@@ -9,6 +11,7 @@ import org.dizitart.no2.mapper.jackson.JacksonMapperModule;
 import org.dizitart.no2.mvstore.MVStoreModule;
 import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.domain.port.SettingsRepository;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,7 +38,7 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
         database = Nitrite.builder()
                 .loadModule(store)
-                .loadModule(new JacksonMapperModule())
+                .loadModule(new JacksonMapperModule(new JavaTimeModule()))
                 .openOrCreate();
         //.openOrCreate(user, pass); //todo
     }

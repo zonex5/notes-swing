@@ -10,10 +10,14 @@ module xyz.toway.notes.infrastructure {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.annotation;
+    requires com.fasterxml.jackson.datatype.jsr310;
 
     exports xyz.toway.notes.infrastructure.settings;
     exports xyz.toway.notes.infrastructure.persistence.factory;
     exports xyz.toway.notes.infrastructure.persistence.repository;
+
+    opens xyz.toway.notes.infrastructure.persistence.entity
+            to com.fasterxml.jackson.databind, org.dizitart.no2.jackson;
 
     provides xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory
             with xyz.toway.notes.infrastructure.persistence.factory.NtDatabaseRepositoryFactory;
