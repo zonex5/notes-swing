@@ -1,5 +1,7 @@
 package xyz.toway.notes.service;
 
+import lombok.NonNull;
+import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.types.SyntaxType;
@@ -22,4 +24,13 @@ public class NoteService {
         System.out.println(result);
     }
 
+    public void save(@NonNull ContentModel model) {
+        if (model instanceof NoteModel noteModel) {
+            if (noteModel.getId() == null) {
+                noteRepository.create(noteModel);
+            } else {
+                noteRepository.update(noteModel);
+            }
+        }
+    }
 }

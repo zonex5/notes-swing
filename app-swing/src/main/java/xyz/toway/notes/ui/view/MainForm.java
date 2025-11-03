@@ -13,6 +13,8 @@ import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -186,7 +188,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             var newHash = NoteModel.calculateContentHash(textArea.getText());
             if (newHash != noteModel.getContentHash()) {
                 noteModel.setContent(textArea.getText());
-                presenter.toolbarButtonSave(noteModel);
+                presenter.save(noteModel);
                 System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
             } else {
                 System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
