@@ -82,11 +82,11 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
     }
 
     public void toolbarButtonNew() {
-        var note = new NoteModel();
+        /*var note = new NoteModel();
         note.setTitle("New Note");
         note.setGroupId(null);
         note.setCreatedAt(Instant.now());
-        view.requestNewTabCreation(note);
+        view.requestNewTabCreation(note);*/
     }
 
     public void toolbarButtonOpen() {

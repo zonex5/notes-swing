@@ -28,8 +28,6 @@ public class Main {
         FlatLightLaf.setup();
 
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("My Super Notes");
-
             var presenter = new MainPresenter(setDI());
             MainForm form = new MainForm(presenter);
             presenter.setView(form);

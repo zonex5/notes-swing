@@ -1,11 +1,10 @@
 package xyz.toway.notes.ui.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rtextarea.*;
+import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
@@ -14,8 +13,7 @@ import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +36,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         createUIComponents();
 
+        setTitle("My Super Notes");
         setContentPane(mainPanel);
         setJMenuBar(createMenuBar());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -46,15 +45,17 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setLocationRelativeTo(null);
         setVisible(true);
         setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
+
+        // create a default tab
+        if (tabbedPane.getTabCount() == 0) {
+            requestNewTabCreation(new NoteModel("New Note"));
+        }
     }
 
     private void createUIComponents() {
         mainPanel = new JPanel(new BorderLayout(8, 0));
 
         tabbedPane = new JTabbedPane();
-        //tabbedPane.addTab("Super document", icon("/icons/doc.svg", 16, 16), getContentPane());
-        //tabbedPane.addTab("My document", icon("/icons/doc.svg", 16, 16), getContentPane());
-        //tabbedPane.addTab("huieta.txt", icon("/icons/doc.svg", 16, 16), getContentPane());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
         UIManager.put("TabbedPane.closeHoverForeground", UIManager.getColor("TabbedPane.background"));
@@ -66,15 +67,19 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
-        //tabbedPane.putClientProperty( FlatClientProperties.TABBED_PANE_HIDE_TAB_AREA_WITH_ONE_TAB, true);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tp, index) -> {
+            //try to save content before closing
+            var component = (JPanel) tp.getComponentAt(index);
+            saveContent(component);
 
-        tabbedPane.putClientProperty(
-                FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
-                (BiConsumer<JTabbedPane, Integer>) (tp, index) -> {
-                    tp.removeTabAt(index);
-                    System.out.println("Closed tab at index: " + index);
-                }
-        );
+            // close tab
+            tp.removeTabAt(index);
+
+            // if no tabs left, create a new empty tab
+            if (tp.getTabCount() == 0) {
+                requestNewTabCreation(new NoteModel("New Note"));
+            }
+        });
 
         statusBar = new StatusBar();
         mainPanel.add(statusBar, BorderLayout.SOUTH);
@@ -158,38 +163,43 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.setMargin(new Insets(3, 3, 3, 3));
 
         toolBar.addSeparator();
-        toolBar.add(createButton("New", "/icons/new.svg", () -> {
-            System.out.println("New action");
-            presenter.toolbarButtonNew();
-        }));
+        toolBar.add(createButton("New", "/icons/new.svg", this::createEmptyTab));
         toolBar.add(createButton("Open", "/icons/open.svg", () -> {
             System.out.println("Open action");
         }));
         toolBar.add(createButton("Save", "/icons/save.svg", () -> {
-            System.out.println("Save action");
             var component = (JPanel) tabbedPane.getSelectedComponent();
-            var model = component.getClientProperty("model");
-
-            if (model instanceof NoteModel noteModel) {
-                var textArea = (RSyntaxTextArea) component.getClientProperty("textArea");
-                noteModel.setContent(textArea.getText());
-                presenter.toolbarButtonSave(noteModel);
-            }
-
-            System.out.println();
+            saveContent(component);
         }));
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
         }));
         toolBar.addSeparator();
-        //toolBar.add(createButton("Copy", "/icons/copy.svg", () -> {
-        //    System.out.println("Copy action");
-        //}));
-        //toolBar.add(createButton("Paste", "/icons/paste.svg", () -> {
-        //    System.out.println("Paste action");
-        //}));
 
         return toolBar;
+    }
+
+    private void saveContent(JPanel panel) {
+        var model = panel.getClientProperty("model");
+        if (model instanceof NoteModel noteModel) {
+            var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
+            var newHash = NoteModel.calculateContentHash(textArea.getText());
+            if (newHash != noteModel.getContentHash()) {
+                noteModel.setContent(textArea.getText());
+                presenter.toolbarButtonSave(noteModel);
+                System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
+            } else {
+                System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
+            }
+        }
+    }
+
+    private void createEmptyTab() {
+        var note = new NoteModel();
+        note.setTitle("New Note");
+        note.setGroupId(null);
+        note.setCreatedAt(Instant.now());
+        requestNewTabCreation(note);
     }
 
     private void showStatusBar(boolean visible) {
@@ -232,14 +242,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         panel.add(Box.createVerticalStrut(6));
         panel.add(passwordField);
 
-        int option = JOptionPane.showConfirmDialog(
-                SwingUtilities.windowForComponent(this.mainPanel),
-                panel,
-                "Password Required",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.INFORMATION_MESSAGE,
-                UIManager.getIcon("OptionPane.informationIcon")
-        );
+        int option = JOptionPane.showConfirmDialog(SwingUtilities.windowForComponent(this.mainPanel), panel, "Password Required", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, UIManager.getIcon("OptionPane.informationIcon"));
         if (option == JOptionPane.OK_OPTION) {
             return new String(passwordField.getPassword());
         }
@@ -247,12 +250,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     }
 
     public void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(
-                SwingUtilities.windowForComponent(this.mainPanel),
-                message,
-                "Error",
-                JOptionPane.ERROR_MESSAGE
-        );
+        JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(this.mainPanel), message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     public void showNotification(String message) {
