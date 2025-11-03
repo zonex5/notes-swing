@@ -15,12 +15,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static xyz.toway.notes.ui.Main.icon;
 
-public class MainForm implements GeneralView<MainPresenter> {
+public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
     private final MainPresenter presenter;
 
@@ -31,11 +32,17 @@ public class MainForm implements GeneralView<MainPresenter> {
 
     public MainForm(MainPresenter presenter) {
         this.presenter = presenter;
-        createUIComponents();
-    }
 
-    public JComponent getRootComponent() {
-        return mainPanel;
+        createUIComponents();
+
+        setContentPane(mainPanel);
+        setJMenuBar(createMenuBar());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setPreferredSize(new Dimension(900, 600));
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+        setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
     }
 
     private void createUIComponents() {
@@ -148,7 +155,7 @@ public class MainForm implements GeneralView<MainPresenter> {
         });
     }
 
-    public Component getContentPane() {
+    public RTextScrollPane getContentPane() {
         RSyntaxTextArea textArea = new RSyntaxTextArea();
         textArea.setCodeFoldingEnabled(false);
         textArea.setTabsEmulated(true);
@@ -207,7 +214,7 @@ public class MainForm implements GeneralView<MainPresenter> {
         return sp;
     }
 
-    public JMenuBar getMenuBar() {
+    public JMenuBar createMenuBar() {
         var menuBar = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");

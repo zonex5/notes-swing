@@ -33,7 +33,10 @@ public class Main {
             presenter.setView(form);
             presenter.init();
 
-            frame.setContentPane(form.getRootComponent());
+            frame.setPreferredSize(new Dimension(900, 600));
+            frame.pack();
+
+/*            frame.setContentPane(form.getRootComponent());
             frame.setJMenuBar(form.getMenuBar());
 
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -41,7 +44,7 @@ public class Main {
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            frame.setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
+            frame.setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));*/
         });
 
         //showIcons();
