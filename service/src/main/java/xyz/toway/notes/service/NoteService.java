@@ -6,6 +6,7 @@ import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.types.SyntaxType;
 
+import java.time.Instant;
 import java.util.List;
 
 public class NoteService {
@@ -52,6 +53,7 @@ public class NoteService {
             if (noteModel.getId() == null) {
                 noteRepository.create(noteModel);
             } else {
+                noteModel.setUpdatedAt(Instant.now());
                 noteRepository.update(noteModel);
             }
         }

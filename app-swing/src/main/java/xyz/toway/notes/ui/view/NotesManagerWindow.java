@@ -3,15 +3,21 @@ package xyz.toway.notes.ui.view;
 import lombok.Getter;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.StoredSettings;
-import xyz.toway.notes.ui.presenter.OpenPresenter;
+import xyz.toway.notes.ui.presenter.NotesManagerPresenter;
 import xyz.toway.notes.ui.view.components.OpenItemCellRenderer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class NotesManagerWindow extends ToolWindow implements GeneralView<OpenPresenter> {
+public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesManagerPresenter> {
 
-    private OpenPresenter presenter;
+    private NotesManagerPresenter presenter;
+    private JList<ContentModel> noteList;
+    private List<JButton> noteButtons;
+
+    @Getter
     private DefaultListModel<ContentModel> model;
 
     @Getter
@@ -22,14 +28,38 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<OpenPr
         setTitle("Notes Manager");
         setModal(true);
 
-        presenter = new OpenPresenter();
+        presenter = new NotesManagerPresenter();
         presenter.setView(this);
-
-        model.addAll(presenter.getNotesList());
+        presenter.refreshNotesList();
     }
 
     @Override
-    protected JComponent getContent() {
+    protected JMenuBar createMenuBar() {
+        var menuBar = new JMenuBar();
+        menuBar.add(Box.createHorizontalGlue());
+
+        // create toolbar buttons
+        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.refreshNotesList());
+        JButton renameButton = createButton("Rename note", "/icons/rename.svg", this::renameSelectedNote);
+        JButton deleteButton = createButton("Delete note", "/icons/delete.svg", this::deleteSelectedNote);
+
+        JToolBar toolBar = new JToolBar();
+        toolBar.addSeparator();
+        toolBar.add(refreshButton);
+        menuBar.add(toolBar);
+
+        noteButtons = new ArrayList<>();
+        noteButtons.add(renameButton);
+        noteButtons.add(deleteButton);
+        noteButtons.forEach(button -> button.setEnabled(false));
+        noteButtons.forEach(toolBar::add);
+        toolBar.addSeparator();
+
+        return menuBar;
+    }
+
+    @Override
+    protected JComponent createContent() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout(10, 10));
         panel.setPreferredSize(new Dimension(700, 450));
@@ -54,7 +84,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<OpenPr
     }
 
     @Override
-    public OpenPresenter getPresenter() {
+    public NotesManagerPresenter getPresenter() {
         return presenter;
     }
 
@@ -68,7 +98,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<OpenPr
         panel.setLayout(new BorderLayout());
 
         model = new DefaultListModel<>();
-        JList<ContentModel> noteList = new JList<>(model);
+        noteList = new JList<>(model);
         noteList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         noteList.setCellRenderer(new OpenItemCellRenderer());
 
@@ -87,8 +117,58 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<OpenPr
                 }
             }
         });
+        noteList.getSelectionModel().addListSelectionListener(e ->
+                noteButtons.forEach(button -> button.setEnabled(!noteList.isSelectionEmpty())
+                ));
 
         return panel;
+    }
+
+    private ContentModel getSelectedNote() {
+        int index = noteList.getSelectedIndex();
+        if (index >= 0) {
+            return noteList.getModel().getElementAt(index);
+        }
+        return null;
+    }
+
+    private void deleteSelectedNote() {
+        ContentModel selectedNote = getSelectedNote();
+        if (selectedNote == null) {
+            return;
+        }
+
+        // show confirm dialog
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to delete the note '" + selectedNote.getTitle() + "' ?",
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+        if (result == JOptionPane.YES_OPTION) {
+            model.removeElement(selectedNote);
+            presenter.deleteNote(selectedNote);
+            noteList.repaint();
+        }
+    }
+
+    private void renameSelectedNote() {
+        ContentModel selectedNote = getSelectedNote();
+        if (selectedNote == null) {
+            return;
+        }
+
+        String newTitle = JOptionPane.showInputDialog(
+                this,
+                "Enter new title for the note:",
+                selectedNote.getTitle()
+        );
+        if (newTitle != null && !newTitle.trim().isEmpty()) {
+            selectedNote.setTitle(newTitle.trim());
+            presenter.saveNote(selectedNote);
+            noteList.repaint();
+        }
     }
 
     private JPanel createBottomPanel() {

@@ -179,7 +179,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
     private void openExistingNote() {
         var remove = tabbedPane.getTabCount() == 1 && !panelContentChanged((JPanel) tabbedPane.getComponentAt(0));
-
         NotesManagerWindow w = new NotesManagerWindow(this);
         w.showWindow();
         if (w.getResult() != null) {
@@ -227,15 +226,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         statusBar.setVisible(visible);
         mainPanel.revalidate();
         mainPanel.repaint();
-    }
-
-    // create button with action
-    private JButton createButton(String tooltip, String iconPath, Runnable action) {
-        JButton button = new JButton();
-        button.setToolTipText(tooltip);
-        button.setIcon(icon(iconPath));
-        button.addActionListener(e -> action.run());
-        return button;
     }
 
     @Override

@@ -2,42 +2,36 @@ package xyz.toway.notes.ui.view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
 
 public abstract class ToolWindow extends JDialog {
 
     public ToolWindow(Window owner) {
         super(owner);
-        setType(Type.POPUP);
+        setType(Type.NORMAL);
 
         setModal(false);
-        setAlwaysOnTop(true);
+        setAlwaysOnTop(false);
         setResizable(true);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         JPanel content = new JPanel(new BorderLayout(10, 10));
-        content.setBackground(Color.LIGHT_GRAY);
-
-        content.add(getContent(), BorderLayout.CENTER);
-
+        content.add(createContent(), BorderLayout.CENTER);
         setContentPane(content);
         pack();
+
+        setJMenuBar(createMenuBar());
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowOpened(java.awt.event.WindowEvent e) {
                 reposition();
             }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-                super.windowDeactivated(e);
-                dispose();
-            }
         });
     }
 
-    protected abstract JComponent getContent();
+    protected abstract JComponent createContent();
+
+    protected abstract JMenuBar createMenuBar();
 
     private void reposition() {
         Window owner = getOwner();
