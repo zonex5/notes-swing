@@ -13,8 +13,6 @@ import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +40,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setContentPane(mainPanel);
         setJMenuBar(createMenuBar());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(new Dimension(900, 600));
+        setPreferredSize(new Dimension(1100, 700));
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
@@ -175,6 +173,12 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }));
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
+
+            //FlyWindow openForm = new OpenWindow(this);
+            // openForm.showForm();
+
+            ToolWindow w = new OpenWindow(this);
+            w.showWindow();
         }));
         toolBar.addSeparator();
 
