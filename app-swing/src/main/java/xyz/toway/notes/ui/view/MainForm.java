@@ -164,25 +164,30 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         toolBar.addSeparator();
         toolBar.add(createButton("New", "/icons/new.svg", this::createEmptyTab));
-        toolBar.add(createButton("Open", "/icons/open.svg", () -> {
-            System.out.println("Open action");
-        }));
+        toolBar.add(createButton("Open", "/icons/open.svg", this::openExistingNote));
         toolBar.add(createButton("Save", "/icons/save.svg", () -> {
             var component = (JPanel) tabbedPane.getSelectedComponent();
             saveContent(component);
         }));
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
-
-            NotesManagerWindow w = new NotesManagerWindow(this);
-            w.showWindow();
-            if (w.getResult() != null) {
-                requestNewTabCreation(w.getResult());
-            }
         }));
         toolBar.addSeparator();
 
         return toolBar;
+    }
+
+    private void openExistingNote() {
+        var remove = tabbedPane.getTabCount() == 1 && !panelContentChanged((JPanel) tabbedPane.getComponentAt(0));
+
+        NotesManagerWindow w = new NotesManagerWindow(this);
+        w.showWindow();
+        if (w.getResult() != null) {
+            requestNewTabCreation(w.getResult());
+            if (remove) {
+                tabbedPane.removeTabAt(0);
+            }
+        }
     }
 
     private void saveContent(JPanel panel) {
@@ -198,6 +203,16 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                 System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
             }
         }
+    }
+
+    private boolean panelContentChanged(JPanel panel) {
+        var model = panel.getClientProperty("model");
+        if (model instanceof NoteModel noteModel) {
+            var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
+            var newHash = NoteModel.calculateContentHash(textArea.getText());
+            return newHash != noteModel.getContentHash();
+        }
+        return false;
     }
 
     private void createEmptyTab() {
