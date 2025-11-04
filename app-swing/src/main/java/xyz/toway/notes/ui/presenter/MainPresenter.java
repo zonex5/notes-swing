@@ -1,24 +1,18 @@
 package xyz.toway.notes.ui.presenter;
 
-import lombok.NonNull;
 import xyz.toway.notes.domain.model.ContentModel;
-import xyz.toway.notes.service.DatabaseService;
-import xyz.toway.notes.service.SettingsService;
-import xyz.toway.notes.ui.ApplicationContext;
 import xyz.toway.notes.ui.view.MainForm;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+
+import static xyz.toway.notes.ui.Main.context;
 
 public class MainPresenter implements GeneralPresenter<MainForm> {
     private static final String APP_USER = "app_user";
 
-    private final ApplicationContext context;
     private MainForm view;
 
-    public MainPresenter(@NonNull ApplicationContext applicationContext) {
-        this.context = applicationContext;
+    public MainPresenter() {
 
         // add shutdown hook to close database
         Runtime.getRuntime().addShutdownHook(new Thread(() -> context.getDatabaseService().closeDatabase(), "db-shutdown-hook"));

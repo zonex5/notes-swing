@@ -22,13 +22,17 @@ import java.util.*;
 import java.util.List;
 
 public class Main {
+    public static ApplicationContext context;
+
     public static void main(String[] args) {
         FlatLaf.registerCustomDefaultsSource("themes");
         //FlatIntelliJLaf.setup();
         FlatLightLaf.setup();
 
+        context = setDI();
+
         SwingUtilities.invokeLater(() -> {
-            var presenter = new MainPresenter(setDI());
+            var presenter = new MainPresenter();
             MainForm form = new MainForm(presenter);
             presenter.setView(form);
             presenter.init();
