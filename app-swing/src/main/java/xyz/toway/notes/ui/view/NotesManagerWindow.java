@@ -1,5 +1,7 @@
 package xyz.toway.notes.ui.view;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import lombok.Getter;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.StoredSettings;
@@ -61,7 +63,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
     @Override
     protected JComponent createContent() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout(10, 10));
+        panel.setLayout(new BorderLayout(0, 0));
         panel.setPreferredSize(new Dimension(700, 450));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -77,7 +79,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
         splitPane.setRightComponent(rightPanel);
 
         JPanel bottomPanel = createBottomPanel();
-        bottomPanel.setPreferredSize(new Dimension(700, 40));
+        bottomPanel.setPreferredSize(new Dimension(0, 20));
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -172,19 +174,33 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
     }
 
     private JPanel createBottomPanel() {
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.add(new JButton("New Note"));
-        buttonsPanel.add(new JButton("Delete Note"));
-
-        JPanel searchPanel = new JPanel(new BorderLayout());
-        searchPanel.setPreferredSize(new Dimension(200, 30));
-        searchPanel.setBackground(Color.WHITE);
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setOpaque(false);
-        panel.add(searchPanel, BorderLayout.WEST);
-        panel.add(buttonsPanel, BorderLayout.EAST);
-
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.GREEN);
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        panel.add(getSearchField());
         return panel;
+    }
+
+    private JTextField getSearchField() {
+        JButton searchHistoryButton = new JButton(new FlatSearchWithHistoryIcon(true));
+        searchHistoryButton.setToolTipText("Search History");
+        searchHistoryButton.addActionListener(e -> {
+            JPopupMenu popupMenu = new JPopupMenu();
+            popupMenu.add("(empty)");
+            popupMenu.show(searchHistoryButton, 0, searchHistoryButton.getHeight());
+        });
+
+        JTextField searchField = new JTextField();
+        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_COMPONENT, searchHistoryButton);
+
+        searchField.setBackground(Color.CYAN);
+
+        /*Dimension pref = searchField.getPreferredSize();
+        pref.width = 250;
+        searchField.setPreferredSize(pref);
+        searchField.setMaximumSize(pref);*/
+
+        return searchField;
     }
 }
