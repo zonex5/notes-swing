@@ -16,5 +16,4 @@ public interface DatabaseRepository {
 
     boolean databaseFileIsValid(String path);
 
-    void test();
 }

@@ -17,7 +17,7 @@ module xyz.toway.notes.infrastructure {
     exports xyz.toway.notes.infrastructure.persistence.repository;
 
     opens xyz.toway.notes.infrastructure.persistence.entity
-            to com.fasterxml.jackson.databind, org.dizitart.no2.jackson;
+            to com.fasterxml.jackson.databind, org.dizitart.no2.jackson, org.dizitart.no2;
 
     provides xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory
             with xyz.toway.notes.infrastructure.persistence.factory.NtDatabaseRepositoryFactory;

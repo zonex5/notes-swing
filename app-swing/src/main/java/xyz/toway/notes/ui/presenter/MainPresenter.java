@@ -42,6 +42,11 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
 
         //----------
         context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
+        //context.getNoteService().test("Hello World!");
+        //context.getNoteService().test("Test 2");
+        //context.getNoteService().test("Another note");
+        //context.getNoteService().test("Some note");
+        //context.getNoteService().test("Another super note");
     }
 
     public void menuItemStatusBar(boolean visible) {

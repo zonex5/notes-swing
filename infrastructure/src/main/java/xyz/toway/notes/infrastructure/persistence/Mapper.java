@@ -1,6 +1,7 @@
 package xyz.toway.notes.infrastructure.persistence;
 
 import xyz.toway.notes.domain.model.NoteModel;
+import xyz.toway.notes.domain.types.ContentType;
 import xyz.toway.notes.infrastructure.persistence.entity.NoteEntity;
 
 public final class Mapper {
@@ -14,6 +15,7 @@ public final class Mapper {
         model.setTitle(entity.getTitle());
         model.setCreatedAt(entity.getCreatedAt());
         model.setUpdatedAt(entity.getUpdatedAt());
+        model.setContentType(ContentType.TEXT);
         return model;
     }
 
@@ -26,6 +28,7 @@ public final class Mapper {
         entity.setCreatedAt(model.getCreatedAt());
         entity.setUpdatedAt(model.getUpdatedAt());
         entity.setSyntax(model.getSyntax());
+        entity.setType(model.getContentType());
         return entity;
     }
 }

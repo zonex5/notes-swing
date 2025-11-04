@@ -63,15 +63,4 @@ public class NtDatabaseRepository implements DatabaseRepository {
             return false;
         }
     }
-
-    @Override
-    public void test() {
-        NitriteCollection col = database.getCollection("misc");
-        Document doc = Document.createDocument()
-                .put("name", "Alice")
-                .put("age", 30)
-                .put("skills", new String[]{"Java", "SQL"})
-                .put("meta", Document.createDocument("level", "senior").put("remote", true));
-        col.insert(doc);
-    }
 }

@@ -174,11 +174,11 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
             System.out.println("Export action");
 
-            //FlyWindow openForm = new OpenWindow(this);
-            // openForm.showForm();
-
-            ToolWindow w = new OpenWindow(this);
+            NotesManagerWindow w = new NotesManagerWindow(this);
             w.showWindow();
+            if (w.getResult() != null) {
+                requestNewTabCreation(w.getResult());
+            }
         }));
         toolBar.addSeparator();
 

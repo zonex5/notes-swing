@@ -22,8 +22,4 @@ public class DatabaseService {
         return databaseRepository.databaseFileIsValid(path);
     }
 
-    public void test() {
-        databaseRepository.test();
-        closeDatabase();
-    }
 }

@@ -25,16 +25,17 @@ public class NoteModel extends ContentModel {
     }
 
     @Override
-    protected void updateContentHash() {
-        setContentHash(calculateContentHash(content));
+    public String getContentPreview() {
+        if (getContent() == null) {
+            return "";
+        }
+        String content = getContent().replace("\n", " ").replace("\r", " ");
+        return content.length() <= 70 ? content : content.substring(0, 67) + "...";
     }
 
-    public NoteModel toLightModel() {
-        NoteModel lightModel = new NoteModel();
-        lightModel.setId(this.getId());
-        lightModel.setTitle(this.getTitle());
-        lightModel.setCreatedAt(this.getCreatedAt());
-        return lightModel;
+    @Override
+    protected void updateContentHash() {
+        setContentHash(calculateContentHash(content));
     }
 
     public static long calculateContentHash(String content) {

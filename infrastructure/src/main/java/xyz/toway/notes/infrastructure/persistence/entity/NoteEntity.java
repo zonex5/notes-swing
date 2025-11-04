@@ -21,6 +21,4 @@ public class NoteEntity {
 
     private ContentType type;
     private SyntaxType syntax;
-
-
 }
