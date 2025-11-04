@@ -6,6 +6,8 @@ import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.types.SyntaxType;
 
+import java.util.List;
+
 public class NoteService {
 
     private final NoteRepository noteRepository;
@@ -32,5 +34,16 @@ public class NoteService {
                 noteRepository.update(noteModel);
             }
         }
+    }
+
+    public List<NoteModel> findAll() {
+        return noteRepository.findAll();
+    }
+
+    public List<NoteModel> findAllLight() {
+        return noteRepository.findAll()
+                .stream()
+                .map(NoteModel::toLightModel)
+                .toList();
     }
 }

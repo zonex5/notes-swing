@@ -29,6 +29,14 @@ public class NoteModel extends ContentModel {
         setContentHash(calculateContentHash(content));
     }
 
+    public NoteModel toLightModel() {
+        NoteModel lightModel = new NoteModel();
+        lightModel.setId(this.getId());
+        lightModel.setTitle(this.getTitle());
+        lightModel.setCreatedAt(this.getCreatedAt());
+        return lightModel;
+    }
+
     public static long calculateContentHash(String content) {
         if (content == null || content.isEmpty()) {
             return 0;
