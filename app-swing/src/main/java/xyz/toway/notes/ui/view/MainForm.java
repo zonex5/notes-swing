@@ -2,14 +2,13 @@ package xyz.toway.notes.ui.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.Gutter;
-import org.fife.ui.rtextarea.RTextScrollPane;
+import lombok.NonNull;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
+import xyz.toway.notes.ui.view.components.TextNoteTab;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
 import javax.swing.*;
@@ -70,9 +69,9 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                 }
                 // collect ids of opened documents
                 List<String> ids = Stream.of(tabbedPane.getComponents())
-                        .map(c -> (JPanel) c)
-                        .filter(p -> p.getClientProperty("model") != null)
-                        .map(p -> saveContent(p))
+                        .map(c -> c instanceof TextNoteTab tab ? tab : null)
+                        .filter(Objects::nonNull)
+                        .map(tab -> saveContent(tab))
                         .filter(Objects::nonNull)
                         .map(ContentModel::getId)
                         .toList();
@@ -137,25 +136,12 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             int index = tabbedPane.getSelectedIndex();
             if (index != -1) closeTab(index);
         });
-        renameItem.addActionListener(ev -> {
-            getCurrentContentModel().ifPresent(model -> {
-                InputValueDialog.show(
-                        this,
-                        "Enter new title:",
-                        model.getTitle(),
-                        newTitle -> {
-                            model.setTitle(newTitle);
-                            tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), newTitle);
-                            presenter.save(model);
-                        }
-                );
-            });
-        });
+        renameItem.addActionListener(ev -> renameSelectedTabModel());
     }
 
     private void closeTab(int index) {
         //try to save content before closing
-        var component = (JPanel) tabbedPane.getComponentAt(index);
+        var component = (TextNoteTab) tabbedPane.getComponentAt(index);
         saveContent(component);
 
         // close tab
@@ -167,58 +153,30 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }
     }
 
-    private Optional<ContentModel> getCurrentContentModel() {
-        var component = (JPanel) tabbedPane.getSelectedComponent();
-        if (component != null) {
-            var model = component.getClientProperty("model");
-            if (model instanceof ContentModel contentModel) {
-                return Optional.of(contentModel);
-            }
+    private void renameSelectedTabModel() {
+        if (tabbedPane.getSelectedComponent() instanceof TextNoteTab tab) {
+            var model = tab.getModel();
+            InputValueDialog.show(
+                    this,
+                    "Enter new title:",
+                    model.getTitle(),
+                    newTitle -> {
+                        model.setTitle(newTitle);
+                        tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), newTitle);
+                        presenter.save(model);
+                    }
+            );
         }
-        return Optional.empty();
     }
 
     public void createNewTab(ContentModel contentModel) {
         if (contentModel instanceof NoteModel noteModel) {
-            // create text area
-            RSyntaxTextArea textArea = new RSyntaxTextArea();
-            textArea.setCodeFoldingEnabled(false);
-            textArea.setTabsEmulated(true);
-            textArea.setTabSize(4);
-            textArea.setAntiAliasingEnabled(true);
-            textArea.setMarkOccurrences(true);
-            textArea.setCloseCurlyBraces(true);
-            textArea.setAnimateBracketMatching(true);
-            textArea.setAutoIndentEnabled(true);
-            textArea.setCurrentLineHighlightColor(new Color(255, 251, 226));
-
-            // Wrap into scroll pane with line numbers
-            RTextScrollPane sp = new RTextScrollPane(textArea);
-            sp.setFoldIndicatorEnabled(true);
-            Gutter gutter = sp.getGutter();
-            sp.setFoldIndicatorEnabled(false);
-            gutter.setBookmarkingEnabled(true);
-            gutter.setBookmarkIcon(icon("/icons/bookmark.svg", 14, 14));
-            gutter.setBackground(UIManager.getColor("Panel.background"));
-            gutter.setBorderColor(UIManager.getColor("Separator.foreground"));
-            gutter.setLineNumbersEnabled(false);
-
-            JPanel panel = new JPanel(new BorderLayout());
-            panel.add(sp, BorderLayout.CENTER);
-
-            // store client data
-            panel.putClientProperty("model", contentModel);
-            panel.putClientProperty("textArea", textArea);
+            // create text note tab
+            TextNoteTab textNoteTab = new TextNoteTab(noteModel);
 
             // create a new tab
-            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), panel);
+            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
             tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
-
-            // set data
-            textArea.setText(noteModel.getContent());
-
-            // set focus
-            SwingUtilities.invokeLater(textArea::requestFocusInWindow);
         }
     }
 
@@ -273,7 +231,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.add(createButton("New", "/icons/new.svg", this::createEmptyTab));
         toolBar.add(createButton("Open", "/icons/open.svg", this::openExistingNote));
         toolBar.add(createButton("Save", "/icons/save.svg", () -> {
-            var component = (JPanel) tabbedPane.getSelectedComponent();
+            var component = (TextNoteTab) tabbedPane.getSelectedComponent();
             saveContent(component);
         }));
         toolBar.add(createButton("Export", "/icons/download.svg", () -> {
@@ -288,8 +246,8 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         NotesManagerWindow w = new NotesManagerWindow(this);
         w.showWindow();
         if (w.getResult() != null) {
-            var firstPanel = (JPanel) tabbedPane.getComponentAt(0);
-            var remove = tabbedPane.getTabCount() == 1 && !panelContentChanged(firstPanel) && panelIsNew(firstPanel);
+            var firstPanel = (TextNoteTab) tabbedPane.getComponentAt(0);
+            var remove = tabbedPane.getTabCount() == 1 && firstPanel.canBeRemoved();
             createNewTab(w.getResult());
             if (remove) {
                 tabbedPane.removeTabAt(0);
@@ -297,46 +255,18 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }
     }
 
-    private ContentModel saveContent(JPanel panel) {
-        var model = panel.getClientProperty("model");
-        if (model instanceof NoteModel noteModel) {
-            var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
-            var newHash = NoteModel.calculateContentHash(textArea.getText());
-            if (newHash != noteModel.getContentHash()) {
-                noteModel.setContent(textArea.getText());
-                ContentModel saved = presenter.save(noteModel);
-                System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
-                return saved;
-            } else {
-                System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
-                return noteModel;
-            }
+    private ContentModel saveContent(@NonNull TextNoteTab tab) {
+        var noteModel = tab.getModel();
+        var newHash = NoteModel.calculateContentHash(tab.getText());
+        if (newHash != noteModel.getContentHash()) {
+            noteModel.setContent(tab.getText());
+            ContentModel saved = presenter.save(noteModel);
+            System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
+            return saved;
+        } else {
+            System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
+            return noteModel;
         }
-        return null;
-    }
-
-    /**
-     * Check if the content in the panel has changed compared to the model's content hash.
-     *
-     * @param panel the JPanel containing the note
-     * @return true if the content has changed, false otherwise
-     */
-    private boolean panelContentChanged(JPanel panel) {
-        var model = panel.getClientProperty("model");
-        if (model instanceof NoteModel noteModel) {
-            var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
-            var newHash = NoteModel.calculateContentHash(textArea.getText());
-            return newHash != noteModel.getContentHash();
-        }
-        return false;
-    }
-
-    private boolean panelIsNew(JPanel panel) {
-        var model = panel.getClientProperty("model");
-        if (model instanceof NoteModel noteModel) {
-            return noteModel.isNew();
-        }
-        return false;
     }
 
     private void showStatusBar(boolean visible) {
