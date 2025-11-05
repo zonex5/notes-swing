@@ -8,5 +8,9 @@ public interface GeneralPresenter<V extends GeneralView<?>> {
 
     V getView();
 
-    void init();
+    default void init() {
+    }
+
+    default void destroy() {
+    }
 }

@@ -18,12 +18,7 @@ public class NotesManagerPresenter implements GeneralPresenter<NotesManagerWindo
 
     @Override
     public NotesManagerWindow getView() {
-        return null;
-    }
-
-    @Override
-    public void init() {
-
+        return view;
     }
 
     public List<ContentModel> getNotesList() {

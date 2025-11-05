@@ -51,11 +51,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setVisible(true);
         setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
 
-        // create a default tab
-        //if (tabbedPane.getTabCount() == 0) {
-        //    createEmptyTab();
-        //}
-
         // window listeners
         var _this = this;
         addWindowListener(new WindowAdapter() {
@@ -66,6 +61,13 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                // no tabs/database opened
+                if (tabbedPane.getTabCount() == 0) {
+                    presenter.destroy();
+                    _this.dispose();
+                    System.exit(0);
+                    return;
+                }
                 // collect ids of opened documents
                 List<String> ids = Stream.of(tabbedPane.getComponents())
                         .map(c -> (JPanel) c)
@@ -75,6 +77,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                         .map(ContentModel::getId)
                         .toList();
                 presenter.saveOpenedDocs(ids);
+                presenter.destroy();
                 _this.dispose(); // close window
                 System.exit(0);  // optional: terminate JVM
             }

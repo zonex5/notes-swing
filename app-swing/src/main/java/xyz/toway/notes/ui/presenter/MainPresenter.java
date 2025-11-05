@@ -31,10 +31,12 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         view.applyUISettings(settings);
 
         // try to open existing database
-        settings.databaseFilePath().ifPresent(this::openDatabase);
+        settings.databaseFilePath().ifPresent(path -> {
+            openDatabase(path);
+            // create default tab
+            view.createEmptyTab();
+        });
 
-        // open default tab
-        view.createEmptyTab();
 
         //----------
         //context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
@@ -45,9 +47,14 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         //context.getNoteService().test("Another super note");
     }
 
-    /*public void menuItemStatusBar(boolean visible) {
-        context.getSettingsService().getSettingsRepo().setStatusBarVisible(visible);
-    }*/
+    @Override
+    public void destroy() {
+        try {
+            context.getDatabaseService().closeDatabase();
+        } catch (Exception e) {
+            view.showErrorMessage("Error closing database: " + e.getMessage());
+        }
+    }
 
     public void setSettingsOption(String name, boolean flag) {
         switch (name) {
@@ -90,6 +97,8 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
     public void saveOpenedDocs(List<String> ids) {
         context.getNoteService().saveLastOpenedDocs(ids);
     }
+
+
 
     /*public List<ContentModel> getLastOpenedDocs() {
         return context.getNoteService().getLastOpenedDocs();
