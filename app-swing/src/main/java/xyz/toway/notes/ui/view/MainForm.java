@@ -51,36 +51,32 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
 
         // window listeners
-        var _this = this;
         addWindowListener(new WindowAdapter() {
             @Override
-            public void windowOpened(WindowEvent e) {
-                super.windowOpened(e);
-            }
-
-            @Override
             public void windowClosing(WindowEvent e) {
-                // no tabs/database opened
-                if (tabbedPane.getTabCount() == 0) {
-                    presenter.destroy();
-                    _this.dispose();
-                    System.exit(0);
-                    return;
-                }
-                // collect ids of opened documents
-                List<String> ids = Stream.of(tabbedPane.getComponents())
-                        .map(c -> c instanceof TextNoteTab tab ? tab : null)
-                        .filter(Objects::nonNull)
-                        .map(tab -> saveContent(tab))
-                        .filter(Objects::nonNull)
-                        .map(ContentModel::getId)
-                        .toList();
-                presenter.saveOpenedDocs(ids);
-                presenter.destroy();
-                _this.dispose(); // close window
-                System.exit(0);  // optional: terminate JVM
+                onWindowClosing(e);
             }
         });
+    }
+
+    private void onWindowClosing(WindowEvent e) {
+        // save opened documents
+        if (tabbedPane.getTabCount() > 0) {
+            // collect ids of opened documents
+            List<String> ids = Stream.of(tabbedPane.getComponents())
+                    .map(c -> c instanceof TextNoteTab tab ? tab : null)
+                    .filter(Objects::nonNull)
+                    .map(this::saveContent)
+                    .filter(Objects::nonNull)
+                    .map(ContentModel::getId)
+                    .toList();
+            presenter.saveOpenedDocs(ids);
+        }
+
+        // close window
+        presenter.destroy();
+        this.dispose();
+        System.exit(0);
     }
 
     private void createUIComponents() {
@@ -98,12 +94,13 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
-        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tp, index) -> closeTab(index));
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
+                (BiConsumer<JTabbedPane, Integer>) (tp, index) -> closeTab(index));
 
         statusBar = new StatusBar();
         mainPanel.add(statusBar, BorderLayout.SOUTH);
 
-        ///---- tmp
+        // create popup menu for tab headers
         JPopupMenu popup = new JPopupMenu();
         JMenuItem renameItem = new JMenuItem("Rename", icon("/icons/doc-edit.svg", 16, 16));
         JMenuItem duplicateItem = new JMenuItem("Duplicate", icon("/icons/duplicate.svg", 16, 16));
@@ -112,7 +109,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         popup.add(duplicateItem);
         popup.addSeparator();
         popup.add(closeItem);
-        // Mouse listener for header clicks
         tabbedPane.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -149,7 +145,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         // if no tabs left, create a new empty tab
         if (tabbedPane.getTabCount() == 0) {
-            createNewTab(new NoteModel(ContentModel.DEFAULT_DOCUMENT_TITLE));
+            createNewTab(new NoteModel());
         }
     }
 
@@ -181,11 +177,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     }
 
     public void createEmptyTab() {
-        var note = new NoteModel();
-        note.setTitle(ContentModel.DEFAULT_DOCUMENT_TITLE);
-        note.setGroupId(null);
-        note.setCreatedAt(Instant.now());
-        createNewTab(note);
+        createNewTab(new NoteModel());
     }
 
     public JMenuBar createMenuBar() {

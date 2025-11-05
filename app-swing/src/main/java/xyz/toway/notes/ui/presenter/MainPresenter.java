@@ -34,9 +34,8 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         settings.databaseFilePath().ifPresent(path -> {
             openDatabase(path);
             // create default tab
-            view.createEmptyTab();
+            view.createEmptyTab();  //todo remove "create tabs" logic from presenter. It should be only in view
         });
-
 
         //----------
         //context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");

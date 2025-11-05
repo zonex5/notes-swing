@@ -6,17 +6,19 @@ import lombok.NoArgsConstructor;
 import xyz.toway.notes.domain.types.SyntaxType;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.zip.CRC32C;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 public class NoteModel extends ContentModel {
     private SyntaxType syntax;
     private String content;
 
-    public NoteModel(String title) {
-        super(title);
+    public NoteModel() {
+        setTitle(ContentModel.DEFAULT_DOCUMENT_TITLE);
+        setGroupId(null);
+        setCreatedAt(Instant.now());
     }
 
     public void setContent(String content) {
