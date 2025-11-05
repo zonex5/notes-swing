@@ -5,6 +5,8 @@ import xyz.toway.notes.ui.view.MainForm;
 
 import javax.swing.*;
 
+import java.util.List;
+
 import static xyz.toway.notes.ui.Main.context;
 
 public class MainPresenter implements GeneralPresenter<MainForm> {
@@ -40,8 +42,11 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         // try to open existing database
         settings.databaseFilePath().ifPresent(this::openDatabase);
 
+        // open default tab
+        view.createEmptyTab();
+
         //----------
-        context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
+        //context.getDatabaseService().initDatabase("d:\\test.db", APP_USER, "test");
         //context.getNoteService().test("Hello World!");
         //context.getNoteService().test("Test 2");
         //context.getNoteService().test("Another note");
@@ -49,9 +54,9 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         //context.getNoteService().test("Another super note");
     }
 
-    public void menuItemStatusBar(boolean visible) {
+    /*public void menuItemStatusBar(boolean visible) {
         context.getSettingsService().getSettingsRepo().setStatusBarVisible(visible);
-    }
+    }*/
 
     public void setSettingsOption(String name, boolean flag) {
         switch (name) {
@@ -74,13 +79,28 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
             //}
             context.getDatabaseService().initDatabase(path, APP_USER, "test"); //todo password
             view.showNotification("Notes file opened: " + path);
+
+            // load last opened docs if setting enabled
+            var lastOpenedDocs = context.getNoteService().getLastOpenedDocs();
+            if (context.getSettingsService().getSettingsRepo().getRestoreLastSession() && !lastOpenedDocs.isEmpty()) {
+                lastOpenedDocs.forEach(model -> view.createNewTab(model));
+            }
+            System.out.println("Count of last opened docs: " + lastOpenedDocs.size());
         } catch (Exception e) {
             view.showErrorMessage("Failed to open file: " + path);
             view.showNotification("Failed to open file: " + path, UIManager.getColor("Objects.RedStatus"));
         }
     }
 
-    public void save(ContentModel model) {
-        context.getNoteService().save(model);
+    public ContentModel save(ContentModel model) {
+        return context.getNoteService().save(model);
     }
+
+    public void saveOpenedDocs(List<String> ids) {
+        context.getNoteService().saveLastOpenedDocs(ids);
+    }
+
+    /*public List<ContentModel> getLastOpenedDocs() {
+        return context.getNoteService().getLastOpenedDocs();
+    }*/
 }

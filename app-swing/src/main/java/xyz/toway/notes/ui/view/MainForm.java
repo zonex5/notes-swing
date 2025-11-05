@@ -13,11 +13,15 @@ import xyz.toway.notes.ui.view.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -39,7 +43,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setTitle("My Super Notes");
         setContentPane(mainPanel);
         setJMenuBar(createMenuBar());
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setPreferredSize(new Dimension(1100, 700));
         pack();
         setLocationRelativeTo(null);
@@ -47,9 +51,33 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
 
         // create a default tab
-        if (tabbedPane.getTabCount() == 0) {
-            requestNewTabCreation(new NoteModel("New Note"));
-        }
+        //if (tabbedPane.getTabCount() == 0) {
+        //    createEmptyTab();
+        //}
+
+        // window listeners
+        var _this = this;
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                super.windowOpened(e);
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // collect ids of opened documents
+                List<String> ids = Stream.of(tabbedPane.getComponents())
+                        .map(c -> (JPanel) c)
+                        .filter(p -> p.getClientProperty("model") != null)
+                        .map(p -> saveContent(p))
+                        .filter(Objects::nonNull)
+                        .map(ContentModel::getId)
+                        .toList();
+                presenter.saveOpenedDocs(ids);
+                _this.dispose(); // close window
+                System.exit(0);  // optional: terminate JVM
+            }
+        });
     }
 
     private void createUIComponents() {
@@ -77,7 +105,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
             // if no tabs left, create a new empty tab
             if (tp.getTabCount() == 0) {
-                requestNewTabCreation(new NoteModel("New Note"));
+                createNewTab(new NoteModel(ContentModel.DEFAULT_DOCUMENT_TITLE));
             }
         });
 
@@ -85,7 +113,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         mainPanel.add(statusBar, BorderLayout.SOUTH);
     }
 
-    public void requestNewTabCreation(ContentModel contentModel) {
+    public void createNewTab(ContentModel contentModel) {
         if (contentModel instanceof NoteModel noteModel) {
             // create text area
             RSyntaxTextArea textArea = new RSyntaxTextArea();
@@ -127,6 +155,14 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             // set focus
             SwingUtilities.invokeLater(textArea::requestFocusInWindow);
         }
+    }
+
+    public void createEmptyTab() {
+        var note = new NoteModel();
+        note.setTitle(ContentModel.DEFAULT_DOCUMENT_TITLE);
+        note.setGroupId(null);
+        note.setCreatedAt(Instant.now());
+        createNewTab(note);
     }
 
     public JMenuBar createMenuBar() {
@@ -188,26 +224,29 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         NotesManagerWindow w = new NotesManagerWindow(this);
         w.showWindow();
         if (w.getResult() != null) {
-            requestNewTabCreation(w.getResult());
+            createNewTab(w.getResult());
             if (remove) {
                 tabbedPane.removeTabAt(0);
             }
         }
     }
 
-    private void saveContent(JPanel panel) {
+    private ContentModel saveContent(JPanel panel) {
         var model = panel.getClientProperty("model");
         if (model instanceof NoteModel noteModel) {
             var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
             var newHash = NoteModel.calculateContentHash(textArea.getText());
             if (newHash != noteModel.getContentHash()) {
                 noteModel.setContent(textArea.getText());
-                presenter.save(noteModel);
+                ContentModel saved = presenter.save(noteModel);
                 System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
+                return saved;
             } else {
                 System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());
+                return noteModel;
             }
         }
+        return null;
     }
 
     /**
@@ -224,14 +263,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             return newHash != noteModel.getContentHash();
         }
         return false;
-    }
-
-    private void createEmptyTab() {
-        var note = new NoteModel();
-        note.setTitle("New Note");
-        note.setGroupId(null);
-        note.setCreatedAt(Instant.now());
-        requestNewTabCreation(note);
     }
 
     private void showStatusBar(boolean visible) {

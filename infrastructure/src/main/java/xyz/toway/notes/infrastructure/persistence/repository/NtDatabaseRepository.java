@@ -41,6 +41,9 @@ public class NtDatabaseRepository implements DatabaseRepository {
                 .loadModule(new JacksonMapperModule(new JavaTimeModule()))
                 .openOrCreate();
         //.openOrCreate(user, pass); //todo
+
+        // save last opened database path
+        settingsRepository.setDatabaseFilePath(path);
     }
 
     @Override

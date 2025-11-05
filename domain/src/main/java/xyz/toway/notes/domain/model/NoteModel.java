@@ -25,6 +25,11 @@ public class NoteModel extends ContentModel {
     }
 
     @Override
+    public boolean isNew() {
+        return super.isNew() && (this.content == null || this.content.isEmpty());
+    }
+
+    @Override
     public String getContentPreview() {
         if (getContent() == null) {
             return "";

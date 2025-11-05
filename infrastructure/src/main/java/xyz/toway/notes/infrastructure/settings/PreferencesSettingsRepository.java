@@ -14,7 +14,6 @@ public class PreferencesSettingsRepository implements SettingsRepository {
     private final Preferences prefs = Preferences.userRoot().node("mysupernotes");
 
     public PreferencesSettingsRepository() {
-        System.out.println(prefs.absolutePath());
     }
 
     @Override

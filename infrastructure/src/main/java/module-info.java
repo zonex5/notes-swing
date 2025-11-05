@@ -26,5 +26,8 @@ module xyz.toway.notes.infrastructure {
             with xyz.toway.notes.infrastructure.settings.PreferencesSettingsRepositoryFactory;
 
     provides xyz.toway.notes.domain.port.factory.NoteRepositoryFactory
-            with xyz.toway.notes.infrastructure.persistence.factory.NtRepositoryFactory;
+            with xyz.toway.notes.infrastructure.persistence.factory.NtNoteRepositoryFactory;
+
+    provides xyz.toway.notes.domain.port.factory.LastOpenedRepositoryFactory
+            with xyz.toway.notes.infrastructure.persistence.factory.NtLastOpenedRepositoryFactory;
 }
