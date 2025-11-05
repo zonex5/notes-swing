@@ -59,9 +59,9 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
     private void openDatabase(String path) {
 
         try {
-            if (!context.getDatabaseService().databaseFileIsValid(path)) {
-                throw new Exception();
-            }
+            //if (!context.getDatabaseService().databaseFileIsValid(path)) {
+            //    throw new Exception();
+            //}
             // todo: ask for password dialog
             //var password = view.requestPassword();
             //if (password == null) {

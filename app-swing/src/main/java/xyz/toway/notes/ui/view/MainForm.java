@@ -10,16 +10,17 @@ import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
+import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -95,22 +96,83 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
-        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tp, index) -> {
-            //try to save content before closing
-            var component = (JPanel) tp.getComponentAt(index);
-            saveContent(component);
-
-            // close tab
-            tp.removeTabAt(index);
-
-            // if no tabs left, create a new empty tab
-            if (tp.getTabCount() == 0) {
-                createNewTab(new NoteModel(ContentModel.DEFAULT_DOCUMENT_TITLE));
-            }
-        });
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tp, index) -> closeTab(index));
 
         statusBar = new StatusBar();
         mainPanel.add(statusBar, BorderLayout.SOUTH);
+
+        ///---- tmp
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem renameItem = new JMenuItem("Rename", icon("/icons/doc-edit.svg", 16, 16));
+        JMenuItem duplicateItem = new JMenuItem("Duplicate", icon("/icons/duplicate.svg", 16, 16));
+        JMenuItem closeItem = new JMenuItem("Close", icon("/icons/close.svg", 16, 16));
+        popup.add(renameItem);
+        popup.add(duplicateItem);
+        popup.addSeparator();
+        popup.add(closeItem);
+        // Mouse listener for header clicks
+        tabbedPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) showPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) showPopup(e);
+            }
+
+            private void showPopup(MouseEvent e) {
+                int index = tabbedPane.indexAtLocation(e.getX(), e.getY());
+                if (index != -1) {
+                    tabbedPane.setSelectedIndex(index);
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+        closeItem.addActionListener(ev -> {
+            int index = tabbedPane.getSelectedIndex();
+            if (index != -1) closeTab(index);
+        });
+        renameItem.addActionListener(ev -> {
+            getCurrentContentModel().ifPresent(model -> {
+                InputValueDialog.show(
+                        this,
+                        "Enter new title:",
+                        model.getTitle(),
+                        newTitle -> {
+                            model.setTitle(newTitle);
+                            tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), newTitle);
+                            presenter.save(model);
+                        }
+                );
+            });
+        });
+    }
+
+    private void closeTab(int index) {
+        //try to save content before closing
+        var component = (JPanel) tabbedPane.getComponentAt(index);
+        saveContent(component);
+
+        // close tab
+        tabbedPane.removeTabAt(index);
+
+        // if no tabs left, create a new empty tab
+        if (tabbedPane.getTabCount() == 0) {
+            createNewTab(new NoteModel(ContentModel.DEFAULT_DOCUMENT_TITLE));
+        }
+    }
+
+    private Optional<ContentModel> getCurrentContentModel() {
+        var component = (JPanel) tabbedPane.getSelectedComponent();
+        if (component != null) {
+            var model = component.getClientProperty("model");
+            if (model instanceof ContentModel contentModel) {
+                return Optional.of(contentModel);
+            }
+        }
+        return Optional.empty();
     }
 
     public void createNewTab(ContentModel contentModel) {
@@ -220,10 +282,11 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     }
 
     private void openExistingNote() {
-        var remove = tabbedPane.getTabCount() == 1 && !panelContentChanged((JPanel) tabbedPane.getComponentAt(0));
         NotesManagerWindow w = new NotesManagerWindow(this);
         w.showWindow();
         if (w.getResult() != null) {
+            var firstPanel = (JPanel) tabbedPane.getComponentAt(0);
+            var remove = tabbedPane.getTabCount() == 1 && !panelContentChanged(firstPanel) && panelIsNew(firstPanel);
             createNewTab(w.getResult());
             if (remove) {
                 tabbedPane.removeTabAt(0);
@@ -261,6 +324,14 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             var textArea = (RSyntaxTextArea) panel.getClientProperty("textArea");
             var newHash = NoteModel.calculateContentHash(textArea.getText());
             return newHash != noteModel.getContentHash();
+        }
+        return false;
+    }
+
+    private boolean panelIsNew(JPanel panel) {
+        var model = panel.getClientProperty("model");
+        if (model instanceof NoteModel noteModel) {
+            return noteModel.isNew();
         }
         return false;
     }
