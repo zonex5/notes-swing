@@ -59,6 +59,12 @@ public class NoteService {
         }
     }
 
+    public void delete(@NonNull ContentModel model) {
+        if (model instanceof NoteModel noteModel) {
+            noteRepository.delete(noteModel.getId());
+        }
+    }
+
     public List<NoteModel> findAll() {
         return noteRepository.findAll();
     }

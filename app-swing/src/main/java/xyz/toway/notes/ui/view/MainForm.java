@@ -139,20 +139,26 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         JMenu viewMenu = new JMenu("View");
         JCheckBoxMenuItem statusBarItem = new JCheckBoxMenuItem("Show Status Bar");
-        statusBarItem.addActionListener(e -> {
-            presenter.menuItemStatusBar(statusBarItem.isSelected());
-            showStatusBar(statusBarItem.isSelected());
-        });
         viewMenu.add(statusBarItem);
         menuBar.add(viewMenu);
-        menuItems.put("statusbar", statusBarItem);
-
-        JMenu helpMenu = new JMenu("Help");
-        helpMenu.add(new JMenuItem("About"));
-        menuBar.add(helpMenu);
+        menuItems.put("showStatusBar", statusBarItem);
+        JMenu optionsMenu = new JMenu("Options");
+        JCheckBoxMenuItem restoreItem = new JCheckBoxMenuItem("Restore Last Session");
+        optionsMenu.add(restoreItem);
+        menuBar.add(optionsMenu);
+        menuItems.put("restoreLastSession", restoreItem);
 
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
+
+        //---- callbacks
+        statusBarItem.addActionListener(e -> {
+            presenter.setSettingsOption("statusBarVisible", statusBarItem.isSelected());
+            showStatusBar(statusBarItem.isSelected());
+        });
+        restoreItem.addActionListener(e -> {
+            presenter.setSettingsOption("restoreLastSession", restoreItem.isSelected());
+        });
 
         return menuBar;
     }
@@ -204,6 +210,12 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }
     }
 
+    /**
+     * Check if the content in the panel has changed compared to the model's content hash.
+     *
+     * @param panel the JPanel containing the note
+     * @return true if the content has changed, false otherwise
+     */
     private boolean panelContentChanged(JPanel panel) {
         var model = panel.getClientProperty("model");
         if (model instanceof NoteModel noteModel) {
@@ -236,7 +248,8 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     @Override
     public void applyUISettings(StoredSettings settings) {
         showStatusBar(settings.statusBarVisible());
-        menuItems.get("statusbar").setSelected(settings.statusBarVisible());
+        menuItems.get("showStatusBar").setSelected(settings.statusBarVisible());
+        menuItems.get("restoreLastSession").setSelected(settings.restoreLastSession());
     }
 
     public String requestPassword() {

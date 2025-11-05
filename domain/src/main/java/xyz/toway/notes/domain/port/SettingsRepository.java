@@ -11,4 +11,8 @@ public interface SettingsRepository {
     boolean getStatusBarVisible();
 
     void setStatusBarVisible(boolean visible);
+
+    boolean getRestoreLastSession();
+
+    void setRestoreLastSession(boolean flag);
 }

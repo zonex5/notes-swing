@@ -53,6 +53,13 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         context.getSettingsService().getSettingsRepo().setStatusBarVisible(visible);
     }
 
+    public void setSettingsOption(String name, boolean flag) {
+        switch (name) {
+            case "statusBarVisible" -> context.getSettingsService().getSettingsRepo().setStatusBarVisible(flag);
+            case "restoreLastSession" -> context.getSettingsService().getSettingsRepo().setRestoreLastSession(flag);
+        }
+    }
+
     private void openDatabase(String path) {
 
         try {

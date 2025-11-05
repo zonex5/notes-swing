@@ -31,12 +31,11 @@ public class NotesManagerPresenter implements GeneralPresenter<NotesManagerWindo
     }
 
     public void deleteNote(ContentModel selectedNote) {
-        //context.getNoteService().deleteNote(selectedNote);
-        //view.refreshNotesList();
+        context.getNoteService().delete(selectedNote);
     }
 
     public void saveNote(ContentModel selectedNote) {
-        //context.getNoteService().saveNote(selectedNote);
+        context.getNoteService().save(selectedNote);
     }
 
     public void refreshNotesList() {

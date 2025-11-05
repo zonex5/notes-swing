@@ -175,9 +175,9 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
 
     private JPanel createBottomPanel() {
         JPanel panel = new JPanel();
-        panel.setBackground(Color.GREEN);
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        panel.add(getSearchField());
+        //panel.setBackground(Color.GREEN);
+        //panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        //panel.add(getSearchField());
         return panel;
     }
 
