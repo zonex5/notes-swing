@@ -31,7 +31,11 @@ public class Main {
         //FlatIntelliJLaf.setup();
         FlatLightLaf.setup();
 
+        // create DI context
         context = setDI();
+
+        // add shutdown hook to close database
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> context.getDatabaseService().closeDatabase(), "db-shutdown-hook"));
 
         SwingUtilities.invokeLater(() -> {
             var presenter = new MainPresenter();

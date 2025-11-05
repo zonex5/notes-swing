@@ -7,6 +7,7 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.presenter.NotesManagerPresenter;
 import xyz.toway.notes.ui.view.components.OpenItemCellRenderer;
+import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -161,16 +162,11 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
             return;
         }
 
-        String newTitle = JOptionPane.showInputDialog(
-                this,
-                "Enter new title for the note:",
-                selectedNote.getTitle()
-        );
-        if (newTitle != null && !newTitle.trim().isEmpty()) {
-            selectedNote.setTitle(newTitle.trim());
+        InputValueDialog.show(this, "Enter new title for the note:", selectedNote.getTitle(), newTitle -> {
+            selectedNote.setTitle(newTitle);
             presenter.saveNote(selectedNote);
             noteList.repaint();
-        }
+        });
     }
 
     private JPanel createBottomPanel() {

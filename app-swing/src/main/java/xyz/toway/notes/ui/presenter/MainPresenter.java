@@ -14,15 +14,6 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
 
     private MainForm view;
 
-    public MainPresenter() {
-
-        // add shutdown hook to close database
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> context.getDatabaseService().closeDatabase(), "db-shutdown-hook"));
-
-        //---- tmp
-        //context.getSettingsService().getSettings().setDatabaseFilePath("D:\\database.db");
-    }
-
     @Override
     public void setView(MainForm view) {
         this.view = view;
