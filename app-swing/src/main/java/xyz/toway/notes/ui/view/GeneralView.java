@@ -3,29 +3,24 @@ package xyz.toway.notes.ui.view;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 
-import javax.swing.*;
-
-import static xyz.toway.notes.ui.Main.icon;
-
 public interface GeneralView {
 
     default Object requestData(String key) {
         return null;
     }
 
-    void applySettings(StoredSettings settings);
+    default void setData(String key, Object value) {
+    }
 
-    void showErrorMessage(String message);
+    default void applySettings(StoredSettings settings) {
+    }
 
-    void showNotification(String message);
+    default void showErrorMessage(String message) {
+    }
 
-    void openDocument(ContentModel contentModel);
+    default void showNotification(String message) {
+    }
 
-    default JButton createButton(String tooltip, String iconPath, Runnable action) {
-        JButton button = new JButton();
-        button.setToolTipText(tooltip);
-        button.setIcon(icon(iconPath));
-        button.addActionListener(e -> action.run());
-        return button;
+    default void openDocument(ContentModel contentModel) {
     }
 }

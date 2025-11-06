@@ -7,7 +7,7 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.EventBus;
-import xyz.toway.notes.ui.presenter.GeneralPresenter;
+import xyz.toway.notes.ui.presenter.IMainPresenter;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
 import xyz.toway.notes.ui.view.components.TextNoteTab;
@@ -28,9 +28,9 @@ import java.util.stream.Stream;
 
 import static xyz.toway.notes.ui.Main.icon;
 
-public class MainForm extends JFrame implements GeneralView {
+public class MainWindow extends JFrame implements GeneralView {
 
-    private final GeneralPresenter presenter;
+    private final IMainPresenter presenter;
 
     private JPanel mainPanel;
     private StatusBar statusBar;
@@ -38,8 +38,9 @@ public class MainForm extends JFrame implements GeneralView {
 
     private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
-    public MainForm(MainPresenter presenter) {
+    public MainWindow(MainPresenter presenter) {
         this.presenter = presenter;
+        presenter.setView(this);
 
         createUI();
 
@@ -247,7 +248,7 @@ public class MainForm extends JFrame implements GeneralView {
 
         // show Save File Dialog and save content as text file
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setSelectedFile(new java.io.File(presenter.validateFileName(model.getTitle()) + ".txt"));
+        fileChooser.setSelectedFile(new java.io.File(model.getValidFileName() + ".txt"));
         int userSelection = fileChooser.showSaveDialog(this);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             presenter.saveTextFile(component.getText(), fileChooser.getSelectedFile());
@@ -255,7 +256,7 @@ public class MainForm extends JFrame implements GeneralView {
     }
 
     private void openExistingNote() {
-        NotesManagerWindow window = new NotesManagerWindow(this);
+        NotesWindow window = new NotesWindow(this);
         window.showWindow();
         if (window.getResult() != null) {
             // open a note and close the first (default) tab if it's empty
@@ -293,6 +294,14 @@ public class MainForm extends JFrame implements GeneralView {
         statusBar.setVisible(visible);
         mainPanel.revalidate();
         mainPanel.repaint();
+    }
+
+    private JButton createButton(String tooltip, String iconPath, Runnable action) {
+        JButton button = new JButton();
+        button.setToolTipText(tooltip);
+        button.setIcon(icon(iconPath));
+        button.addActionListener(e -> action.run());
+        return button;
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.List;
 
 import static xyz.toway.notes.ui.Main.context;
 
-public class MainPresenter implements GeneralPresenter {
+public class MainPresenter implements IMainPresenter {
     private static final String APP_USER = "app_user";
 
     private GeneralView view;
@@ -96,9 +96,5 @@ public class MainPresenter implements GeneralPresenter {
         } catch (Exception e) {
             view.showErrorMessage("Failed to export note: " + e.getMessage());
         }
-    }
-
-    public String validateFileName(String input) {
-        return context.getUtilsService().toValidFileName(input);
     }
 }

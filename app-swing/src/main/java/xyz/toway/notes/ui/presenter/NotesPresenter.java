@@ -7,7 +7,7 @@ import java.util.List;
 
 import static xyz.toway.notes.ui.Main.context;
 
-public class NotesManagerPresenter implements GeneralPresenter {
+public class NotesPresenter implements INotesPresenter {
 
     private GeneralView view;
 
@@ -21,20 +21,23 @@ public class NotesManagerPresenter implements GeneralPresenter {
         return view;
     }
 
+    @Override
     public List<ContentModel> getNotesList() {
         return context.getNoteService().findAllLight();
     }
 
+    @Override
     public void deleteNote(ContentModel selectedNote) {
         context.getNoteService().delete(selectedNote);
     }
 
+    @Override
     public void saveNote(ContentModel selectedNote) {
         context.getNoteService().save(selectedNote);
     }
 
-    public void refreshNotesList() {
-        view.getModel().clear();
-        view.getModel().addAll(getNotesList());
+    @Override
+    public void setViewData() {
+        view.setData("notesList", getNotesList());
     }
 }
