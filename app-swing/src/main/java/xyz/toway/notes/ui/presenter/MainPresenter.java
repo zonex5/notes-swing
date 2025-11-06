@@ -4,7 +4,6 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.ui.view.MainForm;
 
 import javax.swing.*;
-
 import java.io.File;
 import java.util.List;
 

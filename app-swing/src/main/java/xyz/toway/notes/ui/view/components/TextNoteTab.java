@@ -5,6 +5,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import xyz.toway.notes.domain.model.NoteModel;
+import xyz.toway.notes.ui.EventBus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -56,7 +57,7 @@ public class TextNoteTab extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Notify parent component to save the note
-                TextNoteTab.this.firePropertyChange("saveNote", false, true);
+                EventBus.emitEvent("saveNote", noteModel.getId());
             }
         });
     }

@@ -6,6 +6,7 @@ import lombok.NonNull;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
+import xyz.toway.notes.ui.EventBus;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
 import xyz.toway.notes.ui.view.components.TextNoteTab;
@@ -17,8 +18,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -56,6 +59,9 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                 onWindowClosing(e);
             }
         });
+
+        // custom events
+        EventBus.onEvent("saveNote", param -> saveSelectedTabContent());
     }
 
     private void onWindowClosing(WindowEvent e) {
@@ -188,7 +194,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         if (contentModel instanceof NoteModel noteModel) {
             // create text note tab
             TextNoteTab textNoteTab = new TextNoteTab(noteModel);
-            textNoteTab.addPropertyChangeListener("saveNote", evt -> saveTextContent(textNoteTab));
 
             // create a new tab
             tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
