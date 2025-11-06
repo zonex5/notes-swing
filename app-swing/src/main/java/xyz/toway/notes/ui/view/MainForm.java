@@ -159,7 +159,8 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                     newTitle -> {
                         model.setTitle(newTitle);
                         tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), newTitle);
-                        presenter.save(model);
+                        var saved = presenter.save(model);
+                        model.setId(saved.getId());
                     }
             );
         }
