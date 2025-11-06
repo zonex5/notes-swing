@@ -92,7 +92,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
     }
 
     @Override
-    public void applyUISettings(StoredSettings settings) {
+    public void applySettings(StoredSettings settings) {
 
     }
 
