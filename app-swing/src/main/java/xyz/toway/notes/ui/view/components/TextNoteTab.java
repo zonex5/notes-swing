@@ -8,6 +8,8 @@ import xyz.toway.notes.domain.model.NoteModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -46,6 +48,17 @@ public class TextNoteTab extends JPanel {
 
         // set initial text
         textArea.setText(noteModel.getContent());
+
+        // register hotkeys
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK);  // Ctrl+S
+        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(keyStroke, "saveFile");
+        textArea.getActionMap().put("saveFile", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Notify parent component to save the note
+                TextNoteTab.this.firePropertyChange("saveNote", false, true);
+            }
+        });
     }
 
     public String getText() {

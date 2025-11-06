@@ -188,6 +188,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         if (contentModel instanceof NoteModel noteModel) {
             // create text note tab
             TextNoteTab textNoteTab = new TextNoteTab(noteModel);
+            textNoteTab.addPropertyChangeListener("saveNote", evt -> saveTextContent(textNoteTab));
 
             // create a new tab
             tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
