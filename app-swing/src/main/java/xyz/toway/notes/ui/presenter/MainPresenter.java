@@ -5,6 +5,7 @@ import xyz.toway.notes.ui.view.MainForm;
 
 import javax.swing.*;
 
+import java.io.File;
 import java.util.List;
 
 import static xyz.toway.notes.ui.Main.context;
@@ -97,9 +98,16 @@ public class MainPresenter implements GeneralPresenter<MainForm> {
         context.getNoteService().saveLastOpenedDocs(ids);
     }
 
+    public void saveNoteAsTextFile(String text, File selectedFile) {
+        try {
+            context.getNoteService().saveNoteAsTextFile(text, selectedFile);
+            view.showNotification("Note exported to: " + selectedFile.getAbsolutePath());
+        } catch (Exception e) {
+            view.showErrorMessage("Failed to export note: " + e.getMessage());
+        }
+    }
 
-
-    /*public List<ContentModel> getLastOpenedDocs() {
-        return context.getNoteService().getLastOpenedDocs();
-    }*/
+    public String toValidFileName(String input) {
+        return context.getUtilsService().toValidFileName(input);
+    }
 }

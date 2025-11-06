@@ -43,7 +43,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
 
         // create toolbar buttons
         JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.refreshNotesList());
-        JButton renameButton = createButton("Rename note", "/icons/rename.svg", this::renameSelectedNote);
+        JButton renameButton = createButton("Rename note", "/icons/doc-edit.svg", this::renameSelectedNote);
         JButton deleteButton = createButton("Delete note", "/icons/delete.svg", this::deleteSelectedNote);
 
         JToolBar toolBar = new JToolBar();

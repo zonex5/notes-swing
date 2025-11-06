@@ -17,7 +17,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -66,8 +65,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             List<String> ids = Stream.of(tabbedPane.getComponents())
                     .map(c -> c instanceof TextNoteTab tab ? tab : null)
                     .filter(Objects::nonNull)
-                    .map(this::saveContent)
-                    .filter(Objects::nonNull)
+                    .map(this::saveTextContent)
                     .map(ContentModel::getId)
                     .toList();
             presenter.saveOpenedDocs(ids);
@@ -92,6 +90,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         UIManager.put("TabbedPane.closeIcon", new FlatTabbedPaneCloseIcon());
         tabbedPane.updateUI();
 
+        addTabHeaderContextMenu();
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
@@ -99,7 +98,9 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         statusBar = new StatusBar();
         mainPanel.add(statusBar, BorderLayout.SOUTH);
+    }
 
+    private void addTabHeaderContextMenu() {
         // create popup menu for tab headers
         JPopupMenu popup = new JPopupMenu();
         JMenuItem renameItem = new JMenuItem("Rename", icon("/icons/doc-edit.svg", 16, 16));
@@ -133,12 +134,29 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             if (index != -1) closeTab(index);
         });
         renameItem.addActionListener(ev -> renameSelectedTabModel());
+        duplicateItem.addActionListener(ev -> duplicateTab());
+    }
+
+    private void duplicateTab() {
+        if (tabbedPane.getSelectedComponent() instanceof TextNoteTab tab) {
+            // save current content before duplicating
+            saveTextContent(tab);
+
+            NoteModel originalModel = tab.getModel();
+            NoteModel newModel = new NoteModel();
+            newModel.setTitle(originalModel.getTitle() + " (Copy)");
+            newModel.setContent(originalModel.getContent());
+            createNewTab(newModel);
+
+            // save the duplicated note
+            saveSelectedTabContent();
+        }
     }
 
     private void closeTab(int index) {
         //try to save content before closing
         var component = (TextNoteTab) tabbedPane.getComponentAt(index);
-        saveContent(component);
+        saveTextContent(component);
 
         // close tab
         tabbedPane.removeTabAt(index);
@@ -223,16 +241,24 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.addSeparator();
         toolBar.add(createButton("New", "/icons/new.svg", this::createEmptyTab));
         toolBar.add(createButton("Open", "/icons/open.svg", this::openExistingNote));
-        toolBar.add(createButton("Save", "/icons/save.svg", () -> {
-            var component = (TextNoteTab) tabbedPane.getSelectedComponent();
-            saveContent(component);
-        }));
-        toolBar.add(createButton("Export", "/icons/download.svg", () -> {
-            System.out.println("Export action");
-        }));
+        toolBar.add(createButton("Save", "/icons/save.svg", this::saveSelectedTabContent));
+        toolBar.add(createButton("Export", "/icons/download.svg", this::exportCurrentNote));
         toolBar.addSeparator();
 
         return toolBar;
+    }
+
+    private void exportCurrentNote() {
+        var component = (TextNoteTab) tabbedPane.getSelectedComponent();
+        NoteModel model = component.getModel();
+
+        // show Save File Dialog and save content as text file
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(new java.io.File(presenter.toValidFileName(model.getTitle()) + ".txt"));
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            presenter.saveNoteAsTextFile(component.getText(), fileChooser.getSelectedFile());
+        }
     }
 
     private void openExistingNote() {
@@ -248,13 +274,21 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }
     }
 
-    private ContentModel saveContent(@NonNull TextNoteTab tab) {
+    private ContentModel saveSelectedTabContent() {
+        if (tabbedPane.getSelectedComponent() instanceof TextNoteTab tab) {
+            return saveTextContent(tab);
+        }
+        return null;
+    }
+
+    private ContentModel saveTextContent(@NonNull TextNoteTab tab) {
         var noteModel = tab.getModel();
         var newHash = NoteModel.calculateContentHash(tab.getText());
         if (newHash != noteModel.getContentHash()) {
             noteModel.setContent(tab.getText());
             ContentModel saved = presenter.save(noteModel);
             System.out.println("Saved note: " + noteModel.getTitle() + " with new hash: " + newHash);
+            noteModel.setId(saved.getId());
             return saved;
         } else {
             System.out.println("No changes detected for note: " + noteModel.getTitle() + " with hash: " + noteModel.getContentHash());

@@ -14,6 +14,7 @@ import xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
 import xyz.toway.notes.service.DatabaseService;
 import xyz.toway.notes.service.NoteService;
 import xyz.toway.notes.service.SettingsService;
+import xyz.toway.notes.service.UtilsService;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.MainForm;
 
@@ -75,7 +76,8 @@ public class Main {
         return new ApplicationContext(
                 new DatabaseService(databaseRepository),
                 new NoteService(noteRepository, lastOpenedRepository),
-                new SettingsService(settingsRepository)
+                new SettingsService(settingsRepository),
+                new UtilsService()
         );
     }
 

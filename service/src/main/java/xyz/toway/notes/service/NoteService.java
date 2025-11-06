@@ -7,6 +7,9 @@ import xyz.toway.notes.domain.port.LastOpenedRepository;
 import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.types.SyntaxType;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -63,5 +66,9 @@ public class NoteService {
                 .filter(Objects::nonNull)
                 .map(note -> (ContentModel) note)
                 .toList();
+    }
+
+    public void saveNoteAsTextFile(String text, File selectedFile) throws IOException {
+        Files.writeString(selectedFile.toPath(), text);
     }
 }
