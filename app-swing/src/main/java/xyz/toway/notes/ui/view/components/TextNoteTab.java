@@ -51,13 +51,23 @@ public class TextNoteTab extends JPanel {
         textArea.setText(noteModel.getContent());
 
         // register hotkeys
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK);  // Ctrl+S
-        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(keyStroke, "saveFile");
+        KeyStroke keyStrokeS = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK);  // Ctrl+S
+        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(keyStrokeS, "saveFile");
         textArea.getActionMap().put("saveFile", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Notify parent component to save the note
                 EventBus.emitEvent("saveNote", noteModel.getId());
+            }
+        });
+
+        KeyStroke ctrlN = KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK);
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        inputMap.put(ctrlN, "newTab");
+        getActionMap().put("newTab", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                EventBus.emitEvent("newTab", null);
             }
         });
     }

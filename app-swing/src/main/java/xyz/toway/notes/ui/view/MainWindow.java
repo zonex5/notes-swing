@@ -65,6 +65,7 @@ public class MainWindow extends JFrame implements GeneralView {
 
         // custom events
         EventBus.onEvent("saveNote", param -> saveSelectedTabContent());
+        EventBus.onEvent("newTab", param -> openDocument(null));
 
         // initialize presenter
         presenter.init();
@@ -326,6 +327,7 @@ public class MainWindow extends JFrame implements GeneralView {
             // create a new tab
             tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
             tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+            textNoteTab.setFocus();
         }
         // todo create other types of tabs
     }

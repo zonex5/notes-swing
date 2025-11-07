@@ -85,7 +85,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         panel.add(splitPane, BorderLayout.CENTER);
 
-        JPanel leftPanel = new JPanel();
+        JPanel leftPanel = createGroupsPanel();
         leftPanel.setBackground(Color.WHITE);
         leftPanel.setMinimumSize(new Dimension(200, 0));
         splitPane.setLeftComponent(leftPanel);
@@ -112,6 +112,12 @@ public class NotesWindow extends ToolWindow implements GeneralView {
                 }
             }
         }
+    }
+
+    private JPanel createGroupsPanel() {
+        JPanel panel = new JPanel();
+
+        return panel;
     }
 
     private JPanel createNoteListPanel() {
