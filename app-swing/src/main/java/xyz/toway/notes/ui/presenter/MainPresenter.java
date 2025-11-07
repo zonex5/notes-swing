@@ -67,14 +67,15 @@ public class MainPresenter implements IMainPresenter {
             return;
         }
 
+        // ask for password dialog
+        var password = view.requestData("password");
+        if (password == null) {
+            view.showNotification("Open notes file cancelled.");
+            view.setData("notes-file-problem", null);
+            return;
+        }
+
         try {
-            // ask for password dialog
-            var password = view.requestData("password");
-            if (password == null) {
-                view.showNotification("Open notes file cancelled.");
-                view.setData("notes-file-problem", null);
-                return;
-            }
             context.getDatabaseService().initDatabase(path, APP_USER, (String) password);
             view.showNotification("Notes file: " + path);
             view.setData("open-success", true);
@@ -88,6 +89,7 @@ public class MainPresenter implements IMainPresenter {
             // create default tab
             view.openDocument(null);
         } catch (Exception e) {
+            view.setData("notes-file-problem", null);
             view.showErrorMessage("Failed to open file: " + path);
             view.showNotification("Failed to open file: " + path);
         }
