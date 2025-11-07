@@ -252,7 +252,7 @@ public class MainWindow extends JFrame implements GeneralView {
         optionsMenu.add(restoreItem);
         menuItems.put("restoreLastSession", restoreItem);
 
-        JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("8Add new tab (todo)");
+        JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
         optionsMenu.add(defaultTabItem);
         menuItems.put("defaultTab", defaultTabItem);
 
