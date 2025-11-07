@@ -1,21 +1,19 @@
 package xyz.toway.notes.infrastructure.persistence.repository;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Getter;
 import lombok.NonNull;
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.collection.Document;
-import org.dizitart.no2.collection.NitriteCollection;
 import org.dizitart.no2.mapper.jackson.JacksonMapperModule;
 import org.dizitart.no2.mvstore.MVStoreModule;
 import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.domain.port.SettingsRepository;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class NtDatabaseRepository implements DatabaseRepository {
 
@@ -30,6 +28,14 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
     @Override
     public void initDatabase(@NonNull String path, @NonNull String user, @NonNull String pass) {
+
+        if (database != null && !database.isClosed()) {
+            try {
+                database.close();
+            } catch (Exception ignored) {
+            }
+        }
+
         MVStoreModule store = MVStoreModule.withConfig()
                 .filePath(path)
                 .encryptionKey(pass.toCharArray())
@@ -39,8 +45,7 @@ public class NtDatabaseRepository implements DatabaseRepository {
         database = Nitrite.builder()
                 .loadModule(store)
                 .loadModule(new JacksonMapperModule(new JavaTimeModule()))
-                .openOrCreate();
-        //.openOrCreate(user, pass); //todo
+                .openOrCreate(user, pass);
 
         // save last opened database path
         settingsRepository.setDatabaseFilePath(path);
@@ -55,7 +60,7 @@ public class NtDatabaseRepository implements DatabaseRepository {
 
     @Override
     public boolean databaseFileIsValid(String path) {
-        if (path == null) return false;
+        if (path == null || !Files.exists(Paths.get(path))) return false;
         try (FileInputStream in = new FileInputStream(path)) {
             byte[] buf = new byte[32];
             int n = in.read(buf);

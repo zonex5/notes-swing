@@ -105,11 +105,11 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         if (key.equals("notesList")) {
             model.clear();
             if (value instanceof List<?> notes) {
-                for (Object obj : notes) {
-                    if (obj instanceof ContentModel note) {
-                        model.addElement(note);
-                    }
-                }
+                List<ContentModel> list = notes.stream()
+                        .filter(obj -> obj instanceof ContentModel)
+                        .map(obj -> (ContentModel) obj)
+                        .toList();
+                model.addAll(list);
             }
         }
     }

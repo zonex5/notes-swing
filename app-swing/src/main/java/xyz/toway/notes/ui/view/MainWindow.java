@@ -12,13 +12,16 @@ import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
 import xyz.toway.notes.ui.view.components.TextNoteTab;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
+import xyz.toway.notes.ui.view.dialogs.PasswordInputDialog;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,7 @@ public class MainWindow extends JFrame implements GeneralView {
     private JPanel mainPanel;
     private StatusBar statusBar;
     private JTabbedPane tabbedPane;
+    private JToolBar toolBar;
 
     private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
@@ -73,18 +77,13 @@ public class MainWindow extends JFrame implements GeneralView {
 
     private void onWindowClosing(WindowEvent e) {
         // save opened documents
-        if (tabbedPane.getTabCount() > 0) {
-            // collect ids of opened documents
-            List<String> ids = Stream.of(tabbedPane.getComponents())
-                    .map(c -> c instanceof TextNoteTab tab ? tab : null)
-                    .filter(Objects::nonNull)
-                    .map(this::saveTextContent)
-                    .map(ContentModel::getId)
-                    .toList();
-            presenter.saveOpenedDocs(ids);
-        }
+        saveOpenTabs();
 
         // close window
+        closeWindow();
+    }
+
+    private void closeWindow() {
         presenter.destroy();
         this.dispose();
         System.exit(0);
@@ -178,6 +177,29 @@ public class MainWindow extends JFrame implements GeneralView {
         }
     }
 
+    private void saveOpenTabs() {
+        if (tabbedPane.getTabCount() > 0) {
+            // collect ids of opened documents
+            List<String> ids = Stream.of(tabbedPane.getComponents())
+                    .map(c -> c instanceof TextNoteTab tab ? tab : null)
+                    .filter(Objects::nonNull)
+                    .map(this::saveTextContent)
+                    .map(ContentModel::getId)
+                    .toList();
+            presenter.saveOpenedDocs(ids);
+        }
+    }
+
+    private void closeAllTabs() {
+        while (tabbedPane.getTabCount() > 0) {
+            //try to save content before closing
+            var component = (TextNoteTab) tabbedPane.getComponentAt(0);
+            saveTextContent(component);  // todo other types of tabs
+
+            tabbedPane.removeTabAt(0);
+        }
+    }
+
     private void renameSelectedTabModel() {
         if (tabbedPane.getSelectedComponent() instanceof TextNoteTab tab) {
             var model = tab.getModel();
@@ -199,8 +221,22 @@ public class MainWindow extends JFrame implements GeneralView {
         var menuBar = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
-        fileMenu.add(new JMenuItem("Open"));
-        fileMenu.add(new JMenuItem("Exit"));
+
+        var newItem = new JMenuItem("Create Notes File", icon("/icons/add-file.svg"));
+        newItem.addActionListener(e -> createNewNotesFile());
+        fileMenu.add(newItem);
+
+        var openItem = new JMenuItem("Open Notes File", icon("/icons/open-file.svg"));
+        openItem.addActionListener(e -> openNotesFile());
+        fileMenu.add(openItem);
+
+        fileMenu.addSeparator();
+
+        fileMenu.add(new JMenuItem("Exit", icon("/icons/exit.svg")) {{
+            addActionListener(e -> {
+                closeWindow();
+            });
+        }});
         menuBar.add(fileMenu);
 
         JMenu viewMenu = new JMenu("View");
@@ -240,7 +276,7 @@ public class MainWindow extends JFrame implements GeneralView {
 
     public JToolBar getToolbar() {
 
-        JToolBar toolBar = new JToolBar();
+        toolBar = new JToolBar();
         toolBar.setMargin(new Insets(3, 3, 3, 3));
 
         toolBar.addSeparator();
@@ -263,6 +299,36 @@ public class MainWindow extends JFrame implements GeneralView {
         int userSelection = fileChooser.showSaveDialog(this);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             presenter.saveTextFile(component.getText(), fileChooser.getSelectedFile());
+        }
+    }
+
+    private void openNotesFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter notesFilter = new FileNameExtensionFilter("Notes File (*.notes)", "notes");
+        fileChooser.addChoosableFileFilter(notesFilter);
+        fileChooser.addChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+        fileChooser.setFileFilter(notesFilter);
+        int returnValue = fileChooser.showOpenDialog(this);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            saveOpenTabs();
+            closeAllTabs();
+            File selectedFile = fileChooser.getSelectedFile();
+            presenter.openDatabase(selectedFile.getAbsolutePath());
+        }
+    }
+
+    private void createNewNotesFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter notesFilter = new FileNameExtensionFilter("Notes File (*.notes)", "notes");
+        fileChooser.addChoosableFileFilter(notesFilter);
+        fileChooser.setFileFilter(notesFilter);
+        int returnValue = fileChooser.showOpenDialog(this);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            saveOpenTabs();
+            closeAllTabs();
+            File selectedFile = fileChooser.getSelectedFile();
+            presenter.createNewFile(selectedFile.getAbsolutePath());
+            openDocument(null);
         }
     }
 
@@ -342,33 +408,18 @@ public class MainWindow extends JFrame implements GeneralView {
 
     @Override
     public Object requestData(String key) {
-        if (!"password".equals(key)) {
-            return null;
+        if ("password".equals(key)) {
+            return PasswordInputDialog.show(
+                    "Enter Password",
+                    "Please enter your password to unlock the file:"
+            );
         }
-
-        JPasswordField passwordField = new JPasswordField();
-        JLabel label = new JLabel("Please enter your password:");
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        passwordField.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panel.add(label);
-        panel.add(Box.createVerticalStrut(6));
-        panel.add(passwordField);
-
-        int option = JOptionPane.showConfirmDialog(
-                SwingUtilities.windowForComponent(this.mainPanel),
-                panel,
-                "Password Required",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.INFORMATION_MESSAGE,
-                UIManager.getIcon("OptionPane.informationIcon")
-        );
-        if (option == JOptionPane.OK_OPTION) {
-            return new String(passwordField.getPassword());
+        if ("newPassword".equals(key)) {
+            return PasswordInputDialog.show(
+                    "Set Password",
+                    "Please enter a password to lock the file:",
+                    "Confirm password:"
+            );
         }
         return null;
     }
@@ -381,5 +432,24 @@ public class MainWindow extends JFrame implements GeneralView {
     @Override
     public void showNotification(String message) {
         statusBar.setLeftText(message);
+    }
+
+    @Override
+    public void setData(String key, Object value) {
+        if ("notes-file-problem".equals(key)) {
+            // disable toolbar
+            setToolbarEnabled(false);
+        }
+        if ("open-success".equals(key)) {
+            // enable toolbar
+            setToolbarEnabled(true);
+        }
+    }
+
+    public void setToolbarEnabled(boolean enabled) {
+        toolBar.setEnabled(enabled);
+        for (Component c : toolBar.getComponents()) {
+            c.setEnabled(enabled);
+        }
     }
 }

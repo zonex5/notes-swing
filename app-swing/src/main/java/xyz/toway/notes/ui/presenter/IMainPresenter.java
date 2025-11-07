@@ -16,4 +16,8 @@ public interface IMainPresenter extends GeneralPresenter {
     void saveOpenedDocs(List<String> ids);
 
     void saveTextFile(String text, File selectedFile);
+
+    void openDatabase(String path);
+
+    void createNewFile(String path);
 }

@@ -3,6 +3,7 @@ package xyz.toway.notes.ui.presenter;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.ui.view.GeneralView;
 
+import javax.swing.*;
 import java.io.File;
 import java.util.List;
 
@@ -31,9 +32,13 @@ public class MainPresenter implements IMainPresenter {
 
         // try to open existing database
         settings.databaseFilePath().ifPresent(path -> {
-            openDatabase(path);
-            // create default tab
-            view.openDocument(null);
+            if (context.getDatabaseService().databaseFileIsValid(path)) {
+                // open file
+                openDatabase(path);
+            } else {
+                view.setData("notes-file-problem", null);
+                System.out.println("Last opened notes file is invalid: " + path);
+            }
         });
     }
 
@@ -54,30 +59,53 @@ public class MainPresenter implements IMainPresenter {
         }
     }
 
-    private void openDatabase(String path) {
+    @Override
+    public void openDatabase(String path) {
+
+        if (!context.getDatabaseService().databaseFileIsValid(path)) {
+            view.showErrorMessage("Invalid notes file: " + path);
+            return;
+        }
 
         try {
-            //if (!context.getDatabaseService().databaseFileIsValid(path)) {
-            //    throw new Exception();
-            //}
-            // todo: ask for password dialog
-            //var password = view.requestPassword();
-            //if (password == null) {
-            //    view.showNotification("Open notes file cancelled.", UIManager.getColor("TitlePane.inactiveForeground"));
-            //    return;
-            //}
-            context.getDatabaseService().initDatabase(path, APP_USER, "test"); //todo password
-            view.showNotification("Notes file opened: " + path);
+            // ask for password dialog
+            var password = view.requestData("password");
+            if (password == null) {
+                view.showNotification("Open notes file cancelled.");
+                view.setData("notes-file-problem", null);
+                return;
+            }
+            context.getDatabaseService().initDatabase(path, APP_USER, (String) password);
+            view.showNotification("Notes file: " + path);
+            view.setData("open-success", true);
 
             // load last opened docs if setting enabled
-            var lastOpenedDocs = context.getNoteService().getLastOpenedDocs();
-            if (context.getSettingsService().getSettingsRepo().getRestoreLastSession() && !lastOpenedDocs.isEmpty()) {
-                lastOpenedDocs.forEach(model -> view.openDocument(model));
+            if (context.getSettingsService().getSettingsRepo().getRestoreLastSession()) {
+                context.getNoteService().getLastOpenedDocs()
+                        .forEach(model -> view.openDocument(model));
             }
-            System.out.println("Count of last opened docs: " + lastOpenedDocs.size());
+
+            // create default tab
+            view.openDocument(null);
         } catch (Exception e) {
             view.showErrorMessage("Failed to open file: " + path);
             view.showNotification("Failed to open file: " + path);
+        }
+    }
+
+    @Override
+    public void createNewFile(String path) {
+        context.getDatabaseService().closeDatabase();
+        var password = view.requestData("newPassword");
+        if (password == null) {
+            view.showNotification("Create notes file cancelled.");
+            return;
+        }
+        try {
+            context.getDatabaseService().initDatabase(path, APP_USER, (String) password);
+            view.showNotification("New notes file created: " + path);
+        } catch (Exception e) {
+            view.showErrorMessage("Failed to create new notes file: " + e.getMessage());
         }
     }
 
