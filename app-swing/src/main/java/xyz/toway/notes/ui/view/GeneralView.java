@@ -1,23 +1,26 @@
 package xyz.toway.notes.ui.view;
 
+import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.StoredSettings;
-import xyz.toway.notes.ui.presenter.GeneralPresenter;
 
-import javax.swing.*;
+public interface GeneralView {
 
-import static xyz.toway.notes.ui.Main.icon;
+    default Object requestData(String key) {
+        return null;
+    }
 
-public interface GeneralView<P extends GeneralPresenter<?>> {
+    default void setData(String key, Object value) {
+    }
 
-    P getPresenter();
+    default void applySettings(StoredSettings settings) {
+    }
 
-    void applyUISettings(StoredSettings settings);
+    default void showErrorMessage(String message) {
+    }
 
-    default JButton createButton(String tooltip, String iconPath, Runnable action) {
-        JButton button = new JButton();
-        button.setToolTipText(tooltip);
-        button.setIcon(icon(iconPath));
-        button.addActionListener(e -> action.run());
-        return button;
+    default void showNotification(String message) {
+    }
+
+    default void openDocument(ContentModel contentModel) {
     }
 }

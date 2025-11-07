@@ -14,6 +14,8 @@ public abstract class ToolWindow extends JDialog {
         setResizable(true);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
+        initialization();
+
         JPanel content = new JPanel(new BorderLayout(10, 10));
         content.add(createContent(), BorderLayout.CENTER);
         setContentPane(content);
@@ -28,6 +30,8 @@ public abstract class ToolWindow extends JDialog {
             }
         });
     }
+
+    protected abstract void initialization();
 
     protected abstract JComponent createContent();
 

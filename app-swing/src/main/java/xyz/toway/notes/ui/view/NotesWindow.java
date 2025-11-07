@@ -4,8 +4,8 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import lombok.Getter;
 import xyz.toway.notes.domain.model.ContentModel;
-import xyz.toway.notes.domain.model.StoredSettings;
-import xyz.toway.notes.ui.presenter.NotesManagerPresenter;
+import xyz.toway.notes.ui.presenter.INotesPresenter;
+import xyz.toway.notes.ui.presenter.NotesPresenter;
 import xyz.toway.notes.ui.view.components.OpenItemCellRenderer;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
@@ -14,26 +14,41 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesManagerPresenter> {
+import static xyz.toway.notes.ui.Main.icon;
 
-    private NotesManagerPresenter presenter;
-    private JList<ContentModel> noteList;
+public class NotesWindow extends ToolWindow implements GeneralView {
+
+    private INotesPresenter presenter;
+
     private List<JButton> noteButtons;
-
-    @Getter
     private DefaultListModel<ContentModel> model;
+    private JList<ContentModel> noteList;
 
     @Getter
     private ContentModel result;
 
-    public NotesManagerWindow(Window owner) {
+    public NotesWindow(Window owner) {
         super(owner);
         setTitle("Notes Manager");
         setModal(true);
+    }
 
-        presenter = new NotesManagerPresenter();
+    @Override
+    protected void initialization() {
+        model = new DefaultListModel<>();
+        noteList = new JList<>(model);
+        noteButtons = new ArrayList<>();
+        presenter = new NotesPresenter();
         presenter.setView(this);
-        presenter.refreshNotesList();
+        presenter.setViewData();
+    }
+
+    private JButton createButton(String tooltip, String iconPath, Runnable action) {
+        JButton button = new JButton();
+        button.setToolTipText(tooltip);
+        button.setIcon(icon(iconPath));
+        button.addActionListener(e -> action.run());
+        return button;
     }
 
     @Override
@@ -42,7 +57,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
         menuBar.add(Box.createHorizontalGlue());
 
         // create toolbar buttons
-        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.refreshNotesList());
+        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.setViewData()); // do not replace with method reference
         JButton renameButton = createButton("Rename note", "/icons/doc-edit.svg", this::renameSelectedNote);
         JButton deleteButton = createButton("Delete note", "/icons/delete.svg", this::deleteSelectedNote);
 
@@ -86,27 +101,26 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
         return panel;
     }
 
-    @Override
-    public NotesManagerPresenter getPresenter() {
-        return presenter;
-    }
-
-    @Override
-    public void applyUISettings(StoredSettings settings) {
-
+    public void setData(String key, Object value) {
+        if (key.equals("notesList")) {
+            model.clear();
+            if (value instanceof List<?> notes) {
+                for (Object obj : notes) {
+                    if (obj instanceof ContentModel note) {
+                        model.addElement(note);
+                    }
+                }
+            }
+        }
     }
 
     private JPanel createNoteListPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
-        model = new DefaultListModel<>();
-        noteList = new JList<>(model);
         noteList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         noteList.setCellRenderer(new OpenItemCellRenderer());
-
-        JScrollPane scrollPane = new JScrollPane(noteList);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(new JScrollPane(noteList), BorderLayout.CENTER);
 
         noteList.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -120,8 +134,9 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
                 }
             }
         });
-        noteList.getSelectionModel().addListSelectionListener(e ->
-                noteButtons.forEach(button -> button.setEnabled(!noteList.isSelectionEmpty())
+        noteList.getSelectionModel()
+                .addListSelectionListener(e -> noteButtons.forEach(
+                        button -> button.setEnabled(!noteList.isSelectionEmpty())
                 ));
 
         return panel;
@@ -144,8 +159,7 @@ public class NotesManagerWindow extends ToolWindow implements GeneralView<NotesM
         // show confirm dialog
         int result = JOptionPane.showConfirmDialog(
                 null,
-                "Are you sure you want to delete the note '" + selectedNote.getTitle() + "' ?",
-                "Confirm Deletion",
+                "Are you sure you want to delete the note '" + selectedNote.getTitle() + "' ?", "Confirm Deletion",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );

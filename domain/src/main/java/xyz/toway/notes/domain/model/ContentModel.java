@@ -35,5 +35,29 @@ public abstract class ContentModel {
         return (this.id == null || this.id.isEmpty()) && DEFAULT_DOCUMENT_TITLE.equals(this.title);
     }
 
+    /**
+     * Sanitizes a string to be a valid file name.
+     * Removes or replaces invalid characters: \ / : * ? " < > |
+     * Trims spaces and dots from the end.
+     */
+    public String getValidFileName() {
+        if (title == null || title.isBlank()) {
+            return "unnamed";
+        }
+
+        // Replace invalid characters with underscore
+        String sanitized = title.replaceAll("[\\\\/:*?\"<>|]", "_");
+
+        // Trim spaces and dots from end (Windows restriction)
+        sanitized = sanitized.replaceAll("[\\s.]+$", "");
+
+        // Prevent empty result
+        if (sanitized.isEmpty()) {
+            sanitized = "unnamed";
+        }
+
+        return sanitized;
+    }
+
     protected abstract void updateContentHash();
 }

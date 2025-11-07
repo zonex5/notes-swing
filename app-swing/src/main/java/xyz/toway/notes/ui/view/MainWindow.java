@@ -7,6 +7,7 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.EventBus;
+import xyz.toway.notes.ui.presenter.IMainPresenter;
 import xyz.toway.notes.ui.presenter.MainPresenter;
 import xyz.toway.notes.ui.view.components.StatusBar;
 import xyz.toway.notes.ui.view.components.TextNoteTab;
@@ -23,13 +24,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static xyz.toway.notes.ui.Main.icon;
 
-public class MainForm extends JFrame implements GeneralView<MainPresenter> {
+public class MainWindow extends JFrame implements GeneralView {
 
-    private final MainPresenter presenter;
+    private final IMainPresenter presenter;
 
     private JPanel mainPanel;
     private StatusBar statusBar;
@@ -37,10 +39,11 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
     private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
-    public MainForm(MainPresenter presenter) {
+    public MainWindow(MainPresenter presenter) {
         this.presenter = presenter;
+        presenter.setView(this);
 
-        createUIComponents();
+        createUI();
 
         setTitle("My Super Notes");
         setContentPane(mainPanel);
@@ -62,6 +65,9 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         // custom events
         EventBus.onEvent("saveNote", param -> saveSelectedTabContent());
+
+        // initialize presenter
+        presenter.init();
     }
 
     private void onWindowClosing(WindowEvent e) {
@@ -83,7 +89,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         System.exit(0);
     }
 
-    private void createUIComponents() {
+    private void createUI() {
         mainPanel = new JPanel(new BorderLayout(8, 0));
 
         tabbedPane = new JTabbedPane();
@@ -99,8 +105,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         addTabHeaderContextMenu();
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close");
-        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
-                (BiConsumer<JTabbedPane, Integer>) (tp, index) -> closeTab(index));
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tp, index) -> closeTab(index));
 
         statusBar = new StatusBar();
         mainPanel.add(statusBar, BorderLayout.SOUTH);
@@ -135,10 +140,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
                 }
             }
         });
-        closeItem.addActionListener(ev -> {
-            int index = tabbedPane.getSelectedIndex();
-            if (index != -1) closeTab(index);
-        });
+        closeItem.addActionListener(ev -> closeTab(tabbedPane.getSelectedIndex()));
         renameItem.addActionListener(ev -> renameSelectedTabModel());
         duplicateItem.addActionListener(ev -> duplicateTab());
     }
@@ -152,7 +154,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
             NoteModel newModel = new NoteModel();
             newModel.setTitle(originalModel.getTitle() + " (Copy)");
             newModel.setContent(originalModel.getContent());
-            createNewTab(newModel);
+            openDocument(newModel);
 
             // save the duplicated note
             saveSelectedTabContent();
@@ -160,6 +162,8 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
     }
 
     private void closeTab(int index) {
+        if (index < 0 || index >= tabbedPane.getTabCount()) return;
+
         //try to save content before closing
         var component = (TextNoteTab) tabbedPane.getComponentAt(index);
         saveTextContent(component);
@@ -169,7 +173,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         // if no tabs left, create a new empty tab
         if (tabbedPane.getTabCount() == 0) {
-            createNewTab(new NoteModel());
+            openDocument(new NoteModel());
         }
     }
 
@@ -190,21 +194,6 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         }
     }
 
-    public void createNewTab(ContentModel contentModel) {
-        if (contentModel instanceof NoteModel noteModel) {
-            // create text note tab
-            TextNoteTab textNoteTab = new TextNoteTab(noteModel);
-
-            // create a new tab
-            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
-            tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
-        }
-    }
-
-    public void createEmptyTab() {
-        createNewTab(new NoteModel());
-    }
-
     public JMenuBar createMenuBar() {
         var menuBar = new JMenuBar();
 
@@ -218,22 +207,31 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         viewMenu.add(statusBarItem);
         menuBar.add(viewMenu);
         menuItems.put("showStatusBar", statusBarItem);
+
         JMenu optionsMenu = new JMenu("Options");
+        menuBar.add(optionsMenu);
+
         JCheckBoxMenuItem restoreItem = new JCheckBoxMenuItem("Restore Last Session");
         optionsMenu.add(restoreItem);
-        menuBar.add(optionsMenu);
         menuItems.put("restoreLastSession", restoreItem);
+
+        JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
+        optionsMenu.add(defaultTabItem);
+        menuItems.put("defaultTab", defaultTabItem);
 
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
 
         //---- callbacks
         statusBarItem.addActionListener(e -> {
-            presenter.setSettingsOption("statusBarVisible", statusBarItem.isSelected());
+            presenter.saveSettingsFlag("statusBarVisible", statusBarItem.isSelected());
             showStatusBar(statusBarItem.isSelected());
         });
         restoreItem.addActionListener(e -> {
-            presenter.setSettingsOption("restoreLastSession", restoreItem.isSelected());
+            presenter.saveSettingsFlag("restoreLastSession", restoreItem.isSelected());
+        });
+        defaultTabItem.addActionListener(e -> {
+            presenter.saveSettingsFlag("defaultTab", defaultTabItem.isSelected());
         });
 
         return menuBar;
@@ -245,7 +243,7 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         toolBar.setMargin(new Insets(3, 3, 3, 3));
 
         toolBar.addSeparator();
-        toolBar.add(createButton("New", "/icons/new.svg", this::createEmptyTab));
+        toolBar.add(createButton("New", "/icons/new.svg", () -> openDocument(null)));
         toolBar.add(createButton("Open", "/icons/open.svg", this::openExistingNote));
         toolBar.add(createButton("Save", "/icons/save.svg", this::saveSelectedTabContent));
         toolBar.add(createButton("Export", "/icons/download.svg", this::exportCurrentNote));
@@ -260,31 +258,31 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
 
         // show Save File Dialog and save content as text file
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setSelectedFile(new java.io.File(presenter.toValidFileName(model.getTitle()) + ".txt"));
+        fileChooser.setSelectedFile(new java.io.File(model.getValidFileName() + ".txt"));
         int userSelection = fileChooser.showSaveDialog(this);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
-            presenter.saveNoteAsTextFile(component.getText(), fileChooser.getSelectedFile());
+            presenter.saveTextFile(component.getText(), fileChooser.getSelectedFile());
         }
     }
 
     private void openExistingNote() {
-        NotesManagerWindow w = new NotesManagerWindow(this);
-        w.showWindow();
-        if (w.getResult() != null) {
+        NotesWindow window = new NotesWindow(this);
+        window.showWindow();
+        if (window.getResult() != null) {
+            // open a note and close the first (default) tab if it's empty
             var firstPanel = (TextNoteTab) tabbedPane.getComponentAt(0);
             var remove = tabbedPane.getTabCount() == 1 && firstPanel.canBeRemoved();
-            createNewTab(w.getResult());
+            openDocument(window.getResult());
             if (remove) {
                 tabbedPane.removeTabAt(0);
             }
         }
     }
 
-    private ContentModel saveSelectedTabContent() {
+    private void saveSelectedTabContent() {
         if (tabbedPane.getSelectedComponent() instanceof TextNoteTab tab) {
-            return saveTextContent(tab);
+            saveTextContent(tab);
         }
-        return null;
     }
 
     private ContentModel saveTextContent(@NonNull TextNoteTab tab) {
@@ -308,19 +306,44 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         mainPanel.repaint();
     }
 
-    @Override
-    public MainPresenter getPresenter() {
-        return presenter;
+    private JButton createButton(String tooltip, String iconPath, Runnable action) {
+        JButton button = new JButton();
+        button.setToolTipText(tooltip);
+        button.setIcon(icon(iconPath));
+        button.addActionListener(e -> action.run());
+        return button;
     }
 
     @Override
-    public void applyUISettings(StoredSettings settings) {
+    public void openDocument(ContentModel contentModel) {
+        if (contentModel == null) {
+            // create new empty note
+            contentModel = new NoteModel();
+        }
+        if (contentModel instanceof NoteModel noteModel) {
+            // create text note tab
+            TextNoteTab textNoteTab = new TextNoteTab(noteModel);
+            // create a new tab
+            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
+            tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+        }
+        // todo create other types of tabs
+    }
+
+    @Override
+    public void applySettings(StoredSettings settings) {
         showStatusBar(settings.statusBarVisible());
         menuItems.get("showStatusBar").setSelected(settings.statusBarVisible());
         menuItems.get("restoreLastSession").setSelected(settings.restoreLastSession());
+        menuItems.get("defaultTab").setSelected(false); // todo settings.defaultTab()
     }
 
-    public String requestPassword() {
+    @Override
+    public Object requestData(String key) {
+        if (!"password".equals(key)) {
+            return null;
+        }
+
         JPasswordField passwordField = new JPasswordField();
         JLabel label = new JLabel("Please enter your password:");
 
@@ -334,23 +357,27 @@ public class MainForm extends JFrame implements GeneralView<MainPresenter> {
         panel.add(Box.createVerticalStrut(6));
         panel.add(passwordField);
 
-        int option = JOptionPane.showConfirmDialog(SwingUtilities.windowForComponent(this.mainPanel), panel, "Password Required", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, UIManager.getIcon("OptionPane.informationIcon"));
+        int option = JOptionPane.showConfirmDialog(
+                SwingUtilities.windowForComponent(this.mainPanel),
+                panel,
+                "Password Required",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                UIManager.getIcon("OptionPane.informationIcon")
+        );
         if (option == JOptionPane.OK_OPTION) {
             return new String(passwordField.getPassword());
         }
         return null;
     }
 
+    @Override
     public void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(this.mainPanel), message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    @Override
     public void showNotification(String message) {
         statusBar.setLeftText(message);
-    }
-
-    public void showNotification(String message, Color color) {
-        String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
-        statusBar.setLeftText("<html><span style='color: " + hex + ";'>" + message + "</span></html>");
     }
 }
