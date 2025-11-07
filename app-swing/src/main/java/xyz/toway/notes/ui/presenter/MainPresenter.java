@@ -67,13 +67,15 @@ public class MainPresenter implements IMainPresenter {
             return;
         }
 
-        // ask for password dialog
-        var password = view.requestData("password");
+        // ask for password dialog todo
+        /*var password = view.requestData("password");
         if (password == null) {
             view.showNotification("Open notes file cancelled.");
             view.setData("notes-file-problem", null);
             return;
-        }
+        }*/
+
+        var password = "test";
 
         try {
             context.getDatabaseService().initDatabase(path, APP_USER, (String) password);
