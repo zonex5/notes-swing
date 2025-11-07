@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static xyz.toway.notes.ui.Main.icon;
@@ -206,11 +207,17 @@ public class MainWindow extends JFrame implements GeneralView {
         viewMenu.add(statusBarItem);
         menuBar.add(viewMenu);
         menuItems.put("showStatusBar", statusBarItem);
+
         JMenu optionsMenu = new JMenu("Options");
+        menuBar.add(optionsMenu);
+
         JCheckBoxMenuItem restoreItem = new JCheckBoxMenuItem("Restore Last Session");
         optionsMenu.add(restoreItem);
-        menuBar.add(optionsMenu);
         menuItems.put("restoreLastSession", restoreItem);
+
+        JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
+        optionsMenu.add(defaultTabItem);
+        menuItems.put("defaultTab", defaultTabItem);
 
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
@@ -222,6 +229,9 @@ public class MainWindow extends JFrame implements GeneralView {
         });
         restoreItem.addActionListener(e -> {
             presenter.saveSettingsFlag("restoreLastSession", restoreItem.isSelected());
+        });
+        defaultTabItem.addActionListener(e -> {
+            presenter.saveSettingsFlag("defaultTab", defaultTabItem.isSelected());
         });
 
         return menuBar;
@@ -325,6 +335,7 @@ public class MainWindow extends JFrame implements GeneralView {
         showStatusBar(settings.statusBarVisible());
         menuItems.get("showStatusBar").setSelected(settings.statusBarVisible());
         menuItems.get("restoreLastSession").setSelected(settings.restoreLastSession());
+        menuItems.get("defaultTab").setSelected(false); // todo settings.defaultTab()
     }
 
     @Override

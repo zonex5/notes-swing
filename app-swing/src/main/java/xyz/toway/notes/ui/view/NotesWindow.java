@@ -18,10 +18,11 @@ import static xyz.toway.notes.ui.Main.icon;
 
 public class NotesWindow extends ToolWindow implements GeneralView {
 
-    private final INotesPresenter presenter;
-    private final JList<ContentModel> noteList;
-    private final List<JButton> noteButtons;
-    private final DefaultListModel<ContentModel> model;
+    private INotesPresenter presenter;
+
+    private List<JButton> noteButtons;
+    private DefaultListModel<ContentModel> model;
+    private JList<ContentModel> noteList;
 
     @Getter
     private ContentModel result;
@@ -30,11 +31,13 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         super(owner);
         setTitle("Notes Manager");
         setModal(true);
+    }
 
-        noteButtons = new ArrayList<>();
+    @Override
+    protected void initialization() {
         model = new DefaultListModel<>();
         noteList = new JList<>(model);
-
+        noteButtons = new ArrayList<>();
         presenter = new NotesPresenter();
         presenter.setView(this);
         presenter.setViewData();
@@ -54,7 +57,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         menuBar.add(Box.createHorizontalGlue());
 
         // create toolbar buttons
-        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", presenter::setViewData);
+        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.setViewData()); // do not replace with method reference
         JButton renameButton = createButton("Rename note", "/icons/doc-edit.svg", this::renameSelectedNote);
         JButton deleteButton = createButton("Delete note", "/icons/delete.svg", this::deleteSelectedNote);
 
@@ -63,7 +66,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         toolBar.add(refreshButton);
         menuBar.add(toolBar);
 
-        noteButtons.clear();
+        noteButtons = new ArrayList<>();
         noteButtons.add(renameButton);
         noteButtons.add(deleteButton);
         noteButtons.forEach(button -> button.setEnabled(false));
@@ -96,6 +99,19 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    public void setData(String key, Object value) {
+        if (key.equals("notesList")) {
+            model.clear();
+            if (value instanceof List<?> notes) {
+                for (Object obj : notes) {
+                    if (obj instanceof ContentModel note) {
+                        model.addElement(note);
+                    }
+                }
+            }
+        }
     }
 
     private JPanel createNoteListPanel() {
