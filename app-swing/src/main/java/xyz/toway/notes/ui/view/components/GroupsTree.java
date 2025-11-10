@@ -29,6 +29,8 @@ public class GroupsTree extends DnDTree {
 
         rootIcon = icon("/icons/ui/root.svg", 16, 16);
 
+        // DefaultMutableTreeNode ungrouped = new DefaultMutableTreeNode("Ungrouped");
+
         setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
             public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {

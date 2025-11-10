@@ -1,6 +1,6 @@
 package xyz.toway.notes.ui.view.components;
 
-import lombok.Getter;
+import lombok.NonNull;
 import xyz.toway.notes.domain.model.GroupModel;
 
 import javax.swing.*;
@@ -12,11 +12,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class DnDTree extends JTree {
+
+    private final List<DefaultMutableTreeNode> withoutChildren;
 
     public DnDTree(String rootLabel) {
         super(new DefaultMutableTreeNode(rootLabel));
@@ -27,6 +27,22 @@ public class DnDTree extends JTree {
         setDropMode(DropMode.ON_OR_INSERT);
         setTransferHandler(new NodeMoveTransferHandler());
         expandRow(0);
+
+        withoutChildren = new ArrayList<>();
+    }
+
+    public void forbidChildren(DefaultMutableTreeNode node) {
+        if (!withoutChildren.contains(node)) {
+            withoutChildren.add(node);
+        }
+    }
+
+    public boolean isChildrenForbided(DefaultMutableTreeNode node) {
+        return withoutChildren.contains(node);
+    }
+
+    public void insertNode(@NonNull DefaultMutableTreeNode node) {
+        root().insert(node, 0);
     }
 
     public DefaultTreeModel model() {
@@ -122,13 +138,12 @@ public class DnDTree extends JTree {
 
             var target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
 
-            // Get reference to tree and its "Blocked" node todo
-           /* if (support.getComponent() instanceof DnDTree tree) {
-                DefaultMutableTreeNode blocked = tree.getBlockedNode();
-                if (blocked != null && target == blocked) {
+            // Get reference to tree and its "Blocked" node
+            if (support.getComponent() instanceof DnDTree tree) {
+                if (tree.isChildrenForbided(target)) {
                     return false; // forbid dropping into "Ungrouped"
                 }
-            }*/
+            }
 
             if (draggedNode != null) {
                 if (target == draggedNode || isDescendant(draggedNode, target)) return false;
@@ -144,8 +159,7 @@ public class DnDTree extends JTree {
             if (!canImport(support)) return false;
 
             try {
-                var node = (DefaultMutableTreeNode)
-                        support.getTransferable().getTransferData(NODE_FLAVOR);
+                var node = (DefaultMutableTreeNode) support.getTransferable().getTransferData(NODE_FLAVOR);
 
                 var tree = (JTree) support.getComponent();
                 var model = (DefaultTreeModel) tree.getModel();
