@@ -7,14 +7,21 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.presenter.INotesPresenter;
 import xyz.toway.notes.ui.presenter.NotesPresenter;
+import xyz.toway.notes.ui.view.components.DnDTree;
 import xyz.toway.notes.ui.view.components.GroupsTree;
 import xyz.toway.notes.ui.view.components.OpenItemCellRenderer;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -40,6 +47,8 @@ public class NotesWindow extends ToolWindow implements GeneralView {
     protected void initialization() {
         model = new DefaultListModel<>();
         noteList = new JList<>(model);
+        noteList.setDragEnabled(true);
+        noteList.setTransferHandler(new NoteListTransferHandler(noteList));
         noteButtons = new ArrayList<>();
         presenter = new NotesPresenter();
         presenter.setView(this);
@@ -121,6 +130,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
     private JPanel createGroupsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         groupsTree = new GroupsTree("All Notes");
+        groupsTree.setExternalDropHandler(new NoteToGroupDropHandler());
         panel.add(groupsTree);
         return panel;
     }
@@ -229,5 +239,97 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         searchField.setMaximumSize(pref);*/
 
         return searchField;
+    }
+
+    private static final class NoteListTransferHandler extends TransferHandler {
+        static final DataFlavor NOTE_FLAVOR;
+
+        static {
+            try {
+                NOTE_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType + ";class=" + ContentModel.class.getName());
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException("Unable to create note data flavor", e);
+            }
+        }
+
+        private final JList<ContentModel> list;
+
+        private NoteListTransferHandler(JList<ContentModel> list) {
+            this.list = list;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            ContentModel selected = list.getSelectedValue();
+            if (selected == null) {
+                return null;
+            }
+            return new Transferable() {
+                @Override
+                public DataFlavor[] getTransferDataFlavors() {
+                    return new DataFlavor[]{NOTE_FLAVOR};
+                }
+
+                @Override
+                public boolean isDataFlavorSupported(DataFlavor flavor) {
+                    return NOTE_FLAVOR.equals(flavor);
+                }
+
+                @Override
+                public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                    if (!isDataFlavorSupported(flavor)) {
+                        throw new UnsupportedFlavorException(flavor);
+                    }
+                    return selected;
+                }
+            };
+        }
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return MOVE;
+        }
+    }
+
+    private final class NoteToGroupDropHandler implements DnDTree.ExternalDropHandler {
+
+        @Override
+        public boolean canImport(TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+            if (!support.isDataFlavorSupported(NoteListTransferHandler.NOTE_FLAVOR)) {
+                return false;
+            }
+            if (target == null || childIndex != -1) {
+                return false;
+            }
+            return target.isRoot() || target.getUserObject() instanceof GroupModel;
+        }
+
+        @Override
+        public boolean importData(TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+            try {
+                ContentModel note = (ContentModel) support.getTransferable().getTransferData(NoteListTransferHandler.NOTE_FLAVOR);
+                if (note == null) {
+                    return false;
+                }
+                int index = model.indexOf(note);
+                String newGroupId = null;
+                if (target.getUserObject() instanceof GroupModel groupModel) {
+                    newGroupId = groupModel.getId();
+                }
+                if (Objects.equals(note.getGroupId(), newGroupId)) {
+                    return false;
+                }
+                note.setGroupId(newGroupId);
+                presenter.saveNote(note);
+                if (index >= 0) {
+                    model.setElementAt(note, index);
+                }
+                noteList.clearSelection();
+                noteList.repaint();
+                return true;
+            } catch (UnsupportedFlavorException | IOException e) {
+                return false;
+            }
+        }
     }
 }
