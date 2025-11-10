@@ -178,7 +178,7 @@ public class DnDTree extends JTree {
         }
 
         @Override
-        public boolean canImport(TransferSupport s) {
+        public boolean canImport(TransferHandler.TransferSupport s) {
             if (!s.isDrop()) return false;
 
             JTree.DropLocation dl = (JTree.DropLocation) s.getDropLocation();
@@ -214,7 +214,7 @@ public class DnDTree extends JTree {
         }
 
         @Override
-        public boolean importData(TransferSupport s) {
+        public boolean importData(TransferHandler.TransferSupport s) {
             if (!canImport(s)) return false;
             if (!s.isDataFlavorSupported(NODE_FLAVOR)) {
                 if (externalDropHandler == null) return false;
@@ -282,10 +282,10 @@ public class DnDTree extends JTree {
 
     @FunctionalInterface
     public interface ExternalDropHandler {
-        default boolean canImport(TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+        default boolean canImport(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
             return true;
         }
 
-        boolean importData(TransferSupport support, DefaultMutableTreeNode target, int childIndex);
+        boolean importData(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex);
     }
 }

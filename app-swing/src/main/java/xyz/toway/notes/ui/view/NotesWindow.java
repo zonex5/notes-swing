@@ -294,7 +294,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
     private final class NoteToGroupDropHandler implements DnDTree.ExternalDropHandler {
 
         @Override
-        public boolean canImport(TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+        public boolean canImport(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
             if (!support.isDataFlavorSupported(NoteListTransferHandler.NOTE_FLAVOR)) {
                 return false;
             }
@@ -305,7 +305,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         }
 
         @Override
-        public boolean importData(TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+        public boolean importData(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
             try {
                 ContentModel note = (ContentModel) support.getTransferable().getTransferData(NoteListTransferHandler.NOTE_FLAVOR);
                 if (note == null) {
