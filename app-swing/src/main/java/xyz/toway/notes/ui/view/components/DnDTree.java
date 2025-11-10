@@ -1,48 +1,97 @@
 package xyz.toway.notes.ui.view.components;
 
-import lombok.NonNull;
 import xyz.toway.notes.domain.model.GroupModel;
 
 import javax.swing.*;
 import javax.swing.tree.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.StreamSupport;
+import java.util.*;
 
+/**
+ * JTree with MOVE DnD and a single rebuild(List<GroupModel>) entrypoint.
+ * - Regular nodes: draggable and droppable.
+ * - Special nodes: cannot be dragged and cannot receive drops.
+ * <p>
+ * All user-facing comments are in English as requested.
+ */
 public class DnDTree extends JTree {
 
-    private final List<DefaultMutableTreeNode> withoutChildren;
+    // Special nodes are tracked by reference. Re-mark them if you rebuild with new node instances.
+    private final Set<DefaultMutableTreeNode> specialNodes = Collections.newSetFromMap(new IdentityHashMap<>());
 
     public DnDTree(String rootLabel) {
-        super(new DefaultMutableTreeNode(rootLabel));
+        super(new DefaultTreeModel(new DefaultMutableTreeNode(rootLabel != null ? rootLabel : "Root")));
         setRootVisible(true);
         setShowsRootHandles(true);
         getSelectionModel().setSelectionMode(TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
         setDragEnabled(true);
         setDropMode(DropMode.ON_OR_INSERT);
-        setTransferHandler(new NodeMoveTransferHandler());
+        setTransferHandler(new MoveHandler());
         expandRow(0);
-
-        withoutChildren = new ArrayList<>();
     }
 
-    public void forbidChildren(DefaultMutableTreeNode node) {
-        if (!withoutChildren.contains(node)) {
-            withoutChildren.add(node);
+    // ---------- Public API ----------
+
+    /**
+     * Rebuilds the whole tree from top-level GroupModel parents.
+     */
+    public void rebuild(List<GroupModel> parents) {
+        DefaultMutableTreeNode newRoot = new DefaultMutableTreeNode(root().getUserObject());
+
+        for (DefaultMutableTreeNode special : specialNodes) {
+            newRoot.add(special);
         }
+
+        if (parents != null) {
+            for (GroupModel g : parents) {
+                newRoot.add(toNode(g));
+            }
+        }
+
+        model().setRoot(newRoot);
+        expandAll();
     }
 
-    public boolean isChildrenForbided(DefaultMutableTreeNode node) {
-        return withoutChildren.contains(node);
+    /**
+     * Marks a node as special (no drag, no drop-into). You must add this node into the tree yourself.
+     */
+    public void addSpecialNode(DefaultMutableTreeNode node) {
+        if (node != null) specialNodes.add(node);
     }
 
-    public void insertNode(@NonNull DefaultMutableTreeNode node) {
-        root().insert(node, 0);
+    /**
+     * Removes special mark from a node.
+     */
+    public void removeSpecialNode(DefaultMutableTreeNode node) {
+        if (node != null) specialNodes.remove(node);
+    }
+
+    /**
+     * Adds a special node under root and returns it.
+     */
+    public DefaultMutableTreeNode addSpecialNodeUnderRoot(String label) {
+        DefaultMutableTreeNode n = new DefaultMutableTreeNode(label != null ? label : "Special");
+        model().insertNodeInto(n, root(), root().getChildCount());
+        addSpecialNode(n);
+        return n;
+    }
+
+    /**
+     * Inserts a child under root at index with model events.
+     */
+    public void insertAtRoot(DefaultMutableTreeNode child, int index) {
+        if (child == null) return;
+        index = Math.max(0, Math.min(index, root().getChildCount()));
+        model().insertNodeInto(child, root(), index);
+    }
+
+    /**
+     * Sets root label.
+     */
+    public void setRootLabel(String text) {
+        root().setUserObject(text != null ? text : "Root");
+        model().nodeChanged(root());
     }
 
     public DefaultTreeModel model() {
@@ -53,49 +102,40 @@ public class DnDTree extends JTree {
         return (DefaultMutableTreeNode) model().getRoot();
     }
 
-    public void setRootLabel(String text) {
-        root().setUserObject(Objects.requireNonNullElse(text, "Root"));
-        model().nodeChanged(root());
-    }
-
-    public void rebuild(List<GroupModel> parents) {
-        root().removeAllChildren();
-        if (parents != null) {
-            for (GroupModel g : parents) {
-                root().add(toNode(g));
-            }
-        }
-        expandAll();
-    }
-
     /**
-     * Maps a GroupModel subtree to DefaultMutableTreeNode recursively.
+     * Expands all rows.
      */
-    private DefaultMutableTreeNode toNode(GroupModel g) {
-        // Store the model itself as user object for future access
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode(g);
-        StreamSupport.stream(g.getChildren().spliterator(), false)
-                .forEach(child -> node.add(toNode(child)));
-        return node;
-    }
-
     public void expandAll() {
         for (int i = 0; i < getRowCount(); i++) expandRow(i);
     }
 
-    private static final class NodeMoveTransferHandler extends TransferHandler {
-        private static final DataFlavor NODE_FLAVOR;
+    // ---------- Mapping GroupModel -> Swing nodes ----------
 
-        static {
-            try {
-                NODE_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
-                        ";class=" + DefaultMutableTreeNode.class.getName());
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+    private DefaultMutableTreeNode toNode(GroupModel g) {
+        // Store the model as user object so renderer can show title later.
+        DefaultMutableTreeNode n = new DefaultMutableTreeNode(g);
+        Iterable<GroupModel> kids = g.getChildren();
+        if (kids != null) {
+            for (GroupModel ch : kids) {
+                n.add(toNode(ch));
             }
         }
+        return n;
+    }
 
-        private DefaultMutableTreeNode draggedNode;
+    // ---------- DnD handler (MOVE) ----------
+
+    private final class MoveHandler extends TransferHandler {
+        private final DataFlavor NODE_FLAVOR;
+        private DefaultMutableTreeNode dragged;
+
+        MoveHandler() {
+            try {
+                NODE_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType + ";class=" + DefaultMutableTreeNode.class.getName());
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+        }
 
         @Override
         public int getSourceActions(JComponent c) {
@@ -104,11 +144,15 @@ public class DnDTree extends JTree {
 
         @Override
         protected Transferable createTransferable(JComponent c) {
-            var tree = (JTree) c;
-            var sel = tree.getSelectionPath();
+            JTree t = (JTree) c;
+            TreePath sel = t.getSelectionPath();
             if (sel == null) return null;
-            draggedNode = (DefaultMutableTreeNode) sel.getLastPathComponent();
-            if (draggedNode.isRoot()) return null;
+
+            dragged = (DefaultMutableTreeNode) sel.getLastPathComponent();
+
+            // Do not drag root or any special node
+            if (dragged.isRoot() || specialNodes.contains(dragged)) return null;
+
             return new Transferable() {
                 @Override
                 public DataFlavor[] getTransferDataFlavors() {
@@ -121,50 +165,51 @@ public class DnDTree extends JTree {
                 }
 
                 @Override
-                public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
+                public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException, IOException {
                     if (!isDataFlavorSupported(f)) throw new UnsupportedFlavorException(f);
-                    return draggedNode;
+                    return dragged;
                 }
             };
         }
 
         @Override
-        public boolean canImport(TransferSupport support) {
-            if (!support.isDrop()) return false;
-            if (!support.isDataFlavorSupported(NODE_FLAVOR)) return false;
+        public boolean canImport(TransferSupport s) {
+            if (!s.isDrop()) return false;
+            if (!s.isDataFlavorSupported(NODE_FLAVOR)) return false;
 
-            var dl = (JTree.DropLocation) support.getDropLocation();
+            JTree.DropLocation dl = (JTree.DropLocation) s.getDropLocation();
             if (dl == null || dl.getPath() == null) return false;
 
-            var target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
+            DefaultMutableTreeNode target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
 
-            // Get reference to tree and its "Blocked" node
-            if (support.getComponent() instanceof DnDTree tree) {
-                if (tree.isChildrenForbided(target)) {
-                    return false; // forbid dropping into "Ungrouped"
-                }
+            // Forbid drop ON a special node
+            if (dl.getChildIndex() == -1 && specialNodes.contains(target)) return false;
+
+            // Forbid INSERT into a special parent
+            if (dl.getChildIndex() >= 0) {
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) target.getParent();
+                if (parent != null && specialNodes.contains(parent)) return false;
             }
 
-            if (draggedNode != null) {
-                if (target == draggedNode || isDescendant(draggedNode, target)) return false;
+            // Standard self/descendant checks
+            if (dragged != null) {
+                if (target == dragged || isDescendant(dragged, target)) return false;
             }
 
-            support.setDropAction(MOVE);
+            s.setDropAction(MOVE);
             return true;
         }
 
-
         @Override
-        public boolean importData(TransferSupport support) {
-            if (!canImport(support)) return false;
-
+        public boolean importData(TransferSupport s) {
+            if (!canImport(s)) return false;
             try {
-                var node = (DefaultMutableTreeNode) support.getTransferable().getTransferData(NODE_FLAVOR);
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) s.getTransferable().getTransferData(NODE_FLAVOR);
 
-                var tree = (JTree) support.getComponent();
-                var model = (DefaultTreeModel) tree.getModel();
-                var dl = (JTree.DropLocation) support.getDropLocation();
-                var target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
+                JTree t = (JTree) s.getComponent();
+                DefaultTreeModel m = (DefaultTreeModel) t.getModel();
+                JTree.DropLocation dl = (JTree.DropLocation) s.getDropLocation();
+                DefaultMutableTreeNode target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
 
                 DefaultMutableTreeNode newParent;
                 int index;
@@ -177,33 +222,35 @@ public class DnDTree extends JTree {
                     index = dl.getChildIndex();
                 }
 
+                // Enforce special-node rule again
+                if (specialNodes.contains(newParent)) return false;
+
                 if (isDescendant(node, newParent)) return false;
 
-                var oldParent = (DefaultMutableTreeNode) node.getParent();
+                DefaultMutableTreeNode oldParent = (DefaultMutableTreeNode) node.getParent();
                 int oldIndex = oldParent != null ? oldParent.getIndex(node) : -1;
 
-                if (oldParent != null) model.removeNodeFromParent(node);
-
+                if (oldParent != null) m.removeNodeFromParent(node);
                 if (newParent == oldParent && oldIndex >= 0 && index > oldIndex) index--;
 
-                model.insertNodeInto(node, newParent, Math.max(0, Math.min(index, newParent.getChildCount())));
+                m.insertNodeInto(node, newParent, Math.max(0, Math.min(index, newParent.getChildCount())));
 
-                var newPath = new TreePath(model.getPathToRoot(node));
-                tree.scrollPathToVisible(newPath);
-                tree.setSelectionPath(newPath);
+                TreePath newPath = new TreePath(m.getPathToRoot(node));
+                t.scrollPathToVisible(newPath);
+                t.setSelectionPath(newPath);
                 return true;
-            } catch (UnsupportedFlavorException | IOException ex) {
-                ex.printStackTrace();
+            } catch (UnsupportedFlavorException | IOException e) {
+                e.printStackTrace();
                 return false;
             }
         }
 
         @Override
         protected void exportDone(JComponent source, Transferable data, int action) {
-            draggedNode = null;
+            dragged = null;
         }
 
-        private static boolean isDescendant(DefaultMutableTreeNode a, DefaultMutableTreeNode b) {
+        private boolean isDescendant(DefaultMutableTreeNode a, DefaultMutableTreeNode b) {
             if (a == null || b == null) return false;
             if (a == b) return true;
             for (TreeNode n = b.getParent(); n != null; n = ((DefaultMutableTreeNode) n).getParent()) {

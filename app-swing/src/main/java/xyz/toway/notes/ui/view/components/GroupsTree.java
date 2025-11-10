@@ -29,7 +29,8 @@ public class GroupsTree extends DnDTree {
 
         rootIcon = icon("/icons/ui/root.svg", 16, 16);
 
-        // DefaultMutableTreeNode ungrouped = new DefaultMutableTreeNode("Ungrouped");
+        DefaultMutableTreeNode ungrouped = addSpecialNodeUnderRoot("<Ungrouped>");
+        ungrouped.setAllowsChildren(false);
 
         setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
@@ -39,6 +40,9 @@ public class GroupsTree extends DnDTree {
                 if (node.isRoot()) {
                     setIcon(rootIcon);
                 } else {
+                    if (!node.getAllowsChildren()) {
+                        setIcon(icon("/icons/app/default.svg", 16, 16));
+                    }
                     if (node.getUserObject() instanceof GroupModel groupModel) {
                         var iconText = groupModel.getIcon() != null && !groupModel.getIcon().isEmpty() ? groupModel.getIcon() : null;
                         setIcon(icon("/icons/app/" + iconText + ".svg", 16, 16));
