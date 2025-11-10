@@ -14,6 +14,7 @@ import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -31,6 +32,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
 
     private List<JButton> noteButtons;
     private DefaultListModel<ContentModel> model;
+    private List<ContentModel> allNotes;
     private JList<ContentModel> noteList;
     private GroupsTree groupsTree;
 
@@ -52,6 +54,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         noteButtons = new ArrayList<>();
         presenter = new NotesPresenter();
         presenter.setView(this);
+        allNotes = new ArrayList<>();
         //presenter.loadData();
     }
 
@@ -116,13 +119,16 @@ public class NotesWindow extends ToolWindow implements GeneralView {
 
     public void setData(String key, Object value) {
         if (key.equals("notesList")) {
-            model.clear();
             if (value instanceof List<?> notes) {
                 List<ContentModel> list = notes.stream()
                         .filter(obj -> obj instanceof ContentModel)
                         .map(obj -> (ContentModel) obj)
                         .toList();
-                model.addAll(list);
+                allNotes = new ArrayList<>(list);
+                refreshListForCurrentSelection();
+            } else {
+                allNotes = new ArrayList<>();
+                refreshListForCurrentSelection();
             }
         }
     }
@@ -131,6 +137,8 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         JPanel panel = new JPanel(new BorderLayout());
         groupsTree = new GroupsTree("All Notes");
         groupsTree.setExternalDropHandler(new NoteToGroupDropHandler());
+        groupsTree.getSelectionModel().addTreeSelectionListener(e -> refreshListForCurrentSelection());
+        groupsTree.setSelectionRow(0);
         panel.add(groupsTree);
         return panel;
     }
@@ -138,7 +146,12 @@ public class NotesWindow extends ToolWindow implements GeneralView {
     private void loadData() {
         presenter.loadGroups(data -> {
             groupsTree.rebuild(data);
+            if (groupsTree.getSelectionPath() == null) {
+                groupsTree.setSelectionRow(0);
+            }
+            refreshListForCurrentSelection();
         });
+        presenter.loadData();
     }
 
     private JPanel createNoteListPanel() {
@@ -192,6 +205,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         );
         if (result == JOptionPane.YES_OPTION) {
             model.removeElement(selectedNote);
+            allNotes.remove(selectedNote);
             presenter.deleteNote(selectedNote);
             noteList.repaint();
         }
@@ -301,6 +315,9 @@ public class NotesWindow extends ToolWindow implements GeneralView {
             if (target == null || childIndex != -1) {
                 return false;
             }
+            if (target == groupsTree.getUngroupedNode()) {
+                return true;
+            }
             return target.isRoot() || target.getUserObject() instanceof GroupModel;
         }
 
@@ -324,6 +341,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
                 if (index >= 0) {
                     model.setElementAt(note, index);
                 }
+                refreshListForCurrentSelection();
                 noteList.clearSelection();
                 noteList.repaint();
                 return true;
@@ -331,5 +349,49 @@ public class NotesWindow extends ToolWindow implements GeneralView {
                 return false;
             }
         }
+    }
+
+    private void refreshListForCurrentSelection() {
+        model.clear();
+        if (groupsTree == null) {
+            allNotes.forEach(model::addElement);
+            return;
+        }
+        DefaultMutableTreeNode selectedNode = getSelectedTreeNode();
+        List<ContentModel> filtered = filterNotesForNode(selectedNode);
+        filtered.forEach(model::addElement);
+    }
+
+    private DefaultMutableTreeNode getSelectedTreeNode() {
+        TreePath path = groupsTree.getSelectionPath();
+        if (path == null) {
+            return null;
+        }
+        Object last = path.getLastPathComponent();
+        if (last instanceof DefaultMutableTreeNode node) {
+            return node;
+        }
+        return null;
+    }
+
+    private List<ContentModel> filterNotesForNode(DefaultMutableTreeNode node) {
+        if (allNotes == null || allNotes.isEmpty()) {
+            return List.of();
+        }
+        if (node == null || node.isRoot()) {
+            return allNotes;
+        }
+        if (node == groupsTree.getUngroupedNode()) {
+            return allNotes.stream()
+                    .filter(note -> note.getGroupId() == null || note.getGroupId().isBlank())
+                    .toList();
+        }
+        if (node.getUserObject() instanceof GroupModel groupModel) {
+            String groupId = groupModel.getId();
+            return allNotes.stream()
+                    .filter(note -> Objects.equals(groupId, note.getGroupId()))
+                    .toList();
+        }
+        return List.of();
     }
 }
