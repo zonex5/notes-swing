@@ -40,7 +40,7 @@ public class TextNoteTab extends JPanel {
         Gutter gutter = scrollPane.getGutter();
         scrollPane.setFoldIndicatorEnabled(false);
         gutter.setBookmarkingEnabled(true);
-        gutter.setBookmarkIcon(icon("/icons/bookmark.svg", 14, 14));
+        gutter.setBookmarkIcon(icon("/icons/ui/bookmark.svg", 14, 14));
         gutter.setBackground(UIManager.getColor("Panel.background"));
         gutter.setBorderColor(UIManager.getColor("Separator.foreground"));
         gutter.setLineNumbersEnabled(false);

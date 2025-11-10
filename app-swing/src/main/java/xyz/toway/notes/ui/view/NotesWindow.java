@@ -4,8 +4,10 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import lombok.Getter;
 import xyz.toway.notes.domain.model.ContentModel;
+import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.presenter.INotesPresenter;
 import xyz.toway.notes.ui.presenter.NotesPresenter;
+import xyz.toway.notes.ui.view.components.GroupsTree;
 import xyz.toway.notes.ui.view.components.OpenItemCellRenderer;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
 
@@ -18,11 +20,12 @@ import static xyz.toway.notes.ui.Main.icon;
 
 public class NotesWindow extends ToolWindow implements GeneralView {
 
-    private INotesPresenter presenter;
+    private INotesPresenter<GroupModel> presenter;
 
     private List<JButton> noteButtons;
     private DefaultListModel<ContentModel> model;
     private JList<ContentModel> noteList;
+    private GroupsTree groupsTree;
 
     @Getter
     private ContentModel result;
@@ -40,7 +43,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         noteButtons = new ArrayList<>();
         presenter = new NotesPresenter();
         presenter.setView(this);
-        presenter.setViewData();
+        //presenter.loadData();
     }
 
     private JButton createButton(String tooltip, String iconPath, Runnable action) {
@@ -57,9 +60,9 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         menuBar.add(Box.createHorizontalGlue());
 
         // create toolbar buttons
-        JButton refreshButton = createButton("Refresh list", "/icons/refresh.svg", () -> presenter.setViewData()); // do not replace with method reference
-        JButton renameButton = createButton("Rename note", "/icons/doc-edit.svg", this::renameSelectedNote);
-        JButton deleteButton = createButton("Delete note", "/icons/delete.svg", this::deleteSelectedNote);
+        JButton refreshButton = createButton("Refresh list", "/icons/ui/refresh.svg", () -> presenter.loadData()); // do not replace with method reference
+        JButton renameButton = createButton("Rename note", "/icons/ui/doc-edit.svg", this::renameSelectedNote);
+        JButton deleteButton = createButton("Delete note", "/icons/ui/delete.svg", this::deleteSelectedNote);
 
         JToolBar toolBar = new JToolBar();
         toolBar.addSeparator();
@@ -86,7 +89,6 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         panel.add(splitPane, BorderLayout.CENTER);
 
         JPanel leftPanel = createGroupsPanel();
-        leftPanel.setBackground(Color.WHITE);
         leftPanel.setMinimumSize(new Dimension(200, 0));
         splitPane.setLeftComponent(leftPanel);
 
@@ -97,6 +99,8 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         JPanel bottomPanel = createBottomPanel();
         bottomPanel.setPreferredSize(new Dimension(0, 20));
         panel.add(bottomPanel, BorderLayout.SOUTH);
+
+        loadData(); //todo move
 
         return panel;
     }
@@ -115,9 +119,16 @@ public class NotesWindow extends ToolWindow implements GeneralView {
     }
 
     private JPanel createGroupsPanel() {
-        JPanel panel = new JPanel();
-
+        JPanel panel = new JPanel(new BorderLayout());
+        groupsTree = new GroupsTree("All Notes");
+        panel.add(groupsTree);
         return panel;
+    }
+
+    private void loadData() {
+        presenter.loadGroups(data -> {
+            groupsTree.rebuild(data);
+        });
     }
 
     private JPanel createNoteListPanel() {

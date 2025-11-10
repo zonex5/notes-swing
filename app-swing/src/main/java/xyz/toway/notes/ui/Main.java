@@ -3,6 +3,7 @@ package xyz.toway.notes.ui;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import lombok.NonNull;
 import xyz.toway.notes.domain.port.LastOpenedRepository;
 import xyz.toway.notes.domain.port.NoteRepository;
 import xyz.toway.notes.domain.port.DatabaseRepository;
@@ -46,13 +47,16 @@ public class Main {
         });
     }
 
-    public static FlatSVGIcon icon(String path, int w, int h) {
-        return icon(path).derive(w, h);
+    public static FlatSVGIcon icon(@NonNull String path, int w, int h) {
+        var icon = icon(path);
+        if (icon == null) return null;
+
+        return icon.derive(w, h);
     }
 
-    public static FlatSVGIcon icon(String path) {
+    public static FlatSVGIcon icon(@NonNull String path) {
         URL url = Main.class.getResource(path);
-        if (url == null) throw new IllegalStateException("Icon not found: " + path);
+        if (url == null) return null;
         return new FlatSVGIcon(url);
     }
 

@@ -57,7 +57,7 @@ public class MainWindow extends JFrame implements GeneralView {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-        setIconImages(List.of(icon("/icons/icon.svg", 16, 16).getImage()));
+        setIconImages(List.of(icon("/icons/ui/icon.svg", 16, 16).getImage()));
 
         // window listeners
         addWindowListener(new WindowAdapter() {
@@ -114,9 +114,9 @@ public class MainWindow extends JFrame implements GeneralView {
     private void addTabHeaderContextMenu() {
         // create popup menu for tab headers
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem renameItem = new JMenuItem("Rename", icon("/icons/doc-edit.svg", 16, 16));
-        JMenuItem duplicateItem = new JMenuItem("Duplicate", icon("/icons/duplicate.svg", 16, 16));
-        JMenuItem closeItem = new JMenuItem("Close", icon("/icons/close.svg", 16, 16));
+        JMenuItem renameItem = new JMenuItem("Rename", icon("/icons/ui/doc-edit.svg", 16, 16));
+        JMenuItem duplicateItem = new JMenuItem("Duplicate", icon("/icons/ui/duplicate.svg", 16, 16));
+        JMenuItem closeItem = new JMenuItem("Close", icon("/icons/ui/close.svg", 16, 16));
         popup.add(renameItem);
         popup.add(duplicateItem);
         popup.addSeparator();
@@ -222,17 +222,17 @@ public class MainWindow extends JFrame implements GeneralView {
 
         JMenu fileMenu = new JMenu("File");
 
-        var newItem = new JMenuItem("Create Notes File", icon("/icons/add-file.svg"));
+        var newItem = new JMenuItem("Create Notes File", icon("/icons/ui/add-file.svg"));
         newItem.addActionListener(e -> createNewNotesFile());
         fileMenu.add(newItem);
 
-        var openItem = new JMenuItem("Open Notes File", icon("/icons/open-file.svg"));
+        var openItem = new JMenuItem("Open Notes File", icon("/icons/ui/open-file.svg"));
         openItem.addActionListener(e -> openNotesFile());
         fileMenu.add(openItem);
 
         fileMenu.addSeparator();
 
-        fileMenu.add(new JMenuItem("Exit", icon("/icons/exit.svg")) {{
+        fileMenu.add(new JMenuItem("Exit", icon("/icons/ui/exit.svg")) {{
             addActionListener(e -> {
                 closeWindow();
             });
@@ -280,10 +280,10 @@ public class MainWindow extends JFrame implements GeneralView {
         toolBar.setMargin(new Insets(3, 3, 3, 3));
 
         toolBar.addSeparator();
-        toolBar.add(createButton("New", "/icons/new.svg", () -> openDocument(null)));
-        toolBar.add(createButton("Open", "/icons/open.svg", this::openExistingNote));
-        toolBar.add(createButton("Save", "/icons/save.svg", this::saveSelectedTabContent));
-        toolBar.add(createButton("Export", "/icons/download.svg", this::exportCurrentNote));
+        toolBar.add(createButton("New", "/icons/ui/new.svg", () -> openDocument(null)));
+        toolBar.add(createButton("Open", "/icons/ui/open.svg", this::openExistingNote));
+        toolBar.add(createButton("Save", "/icons/ui/save.svg", this::saveSelectedTabContent));
+        toolBar.add(createButton("Export", "/icons/ui/download.svg", this::exportCurrentNote));
         toolBar.addSeparator();
 
         return toolBar;
@@ -391,7 +391,7 @@ public class MainWindow extends JFrame implements GeneralView {
             // create text note tab
             TextNoteTab textNoteTab = new TextNoteTab(noteModel);
             // create a new tab
-            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/doc.svg", 16, 16), textNoteTab);
+            tabbedPane.addTab(noteModel.getTitle(), icon("/icons/ui/doc.svg", 16, 16), textNoteTab);
             tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
             textNoteTab.setFocus();
         }
