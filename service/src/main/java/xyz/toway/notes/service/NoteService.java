@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,13 +43,25 @@ public class NoteService {
         }
     }
 
-    public List<NoteModel> findAll() {
-        return noteRepository.findAll();
+    public List<ContentModel> findAll() {
+        //todo add items from other content types
+        return noteRepository.findAll()
+                .stream()
+                .map(note -> (ContentModel) note)
+                .toList();
     }
 
-    public List<ContentModel> findAllLight() {
+    public List<ContentModel> findAllByParentsLight(Collection<String> ids) {
         //todo add items from other content types
-        return findAll()
+        return noteRepository.findAllByParents(ids)
+                .stream()
+                .map(note -> (ContentModel) note)
+                .toList();
+    }
+
+    public List<ContentModel> findAllOrphansLight() {
+        //todo add items from other content types
+        return noteRepository.findAllOrphans()
                 .stream()
                 .map(note -> (ContentModel) note)
                 .toList();

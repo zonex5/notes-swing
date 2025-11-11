@@ -3,6 +3,7 @@ package xyz.toway.notes.ui.view;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import lombok.Getter;
+import lombok.NonNull;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.presenter.INotesPresenter;
@@ -19,6 +20,8 @@ import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -58,7 +61,6 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         presenter = new NotesPresenter();
         presenter.setView(this);
         allNotes = new ArrayList<>();
-        //presenter.loadData();
     }
 
     private JButton createButton(String tooltip, String iconPath, Runnable action) {
@@ -115,7 +117,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         bottomPanel.setPreferredSize(new Dimension(0, 20));
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        loadData(); //todo move
+        loadData();
 
         return panel;
     }
@@ -140,10 +142,49 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         JPanel panel = new JPanel(new BorderLayout());
         groupsTree = new GroupsTree("All Notes");
         groupsTree.setExternalDropHandler(new NoteToGroupDropHandler());
-        groupsTree.getSelectionModel().addTreeSelectionListener(e -> refreshListForCurrentSelection());
+        groupsTree.getSelectionModel().addTreeSelectionListener(e -> onGroupSelected());
         groupsTree.setSelectionRow(0);
         panel.add(groupsTree);
+
+        JPopupMenu rootMenu = new JPopupMenu();
+        JMenuItem itemInfo = new JMenuItem("Add New Group", icon("/icons/ui/new-folder.svg"));
+        itemInfo.addActionListener(e -> addNewGroup());
+        rootMenu.add(itemInfo);
+
+        // Add mouse listener
+        groupsTree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    int row = groupsTree.getRowForLocation(e.getX(), e.getY());
+                    TreePath path = groupsTree.getPathForLocation(e.getX(), e.getY());
+                    if (row != -1 && path != null) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        // Show menu only for root node
+                        if (node.isRoot()) {
+                            rootMenu.show(groupsTree, e.getX(), e.getY());
+                        }
+                    }
+                }
+            }
+        });
+
         return panel;
+    }
+
+    private void onGroupSelected() {
+        var selectedNode = getSelectedTreeNode();
+
+        if (selectedNode == null || !(selectedNode.getUserObject() instanceof GroupModel)) return;
+
+        Set<String> allowedIds = collectGroupIds(selectedNode);
+    }
+
+    private void addNewGroup() {
+        InputValueDialog.show(this, "New Group", "Input the name:", name -> {
+            presenter.addNewGroup(name);
+            loadData();
+        });
     }
 
     private void loadData() {
@@ -235,27 +276,91 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         return panel;
     }
 
-    private JTextField getSearchField() {
-        JButton searchHistoryButton = new JButton(new FlatSearchWithHistoryIcon(true));
-        searchHistoryButton.setToolTipText("Search History");
-        searchHistoryButton.addActionListener(e -> {
-            JPopupMenu popupMenu = new JPopupMenu();
-            popupMenu.add("(empty)");
-            popupMenu.show(searchHistoryButton, 0, searchHistoryButton.getHeight());
-        });
+/*    private void refreshListForCurrentSelection() {
+        model.clear();
+        DefaultMutableTreeNode selectedNode = getSelectedTreeNode();
+        List<ContentModel> filtered = filterNotesForNode(selectedNode);
+        //filtered.forEach(model::addElement);
+    }
 
-        JTextField searchField = new JTextField();
-        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_COMPONENT, searchHistoryButton);
+*/
 
-        searchField.setBackground(Color.CYAN);
+    private DefaultMutableTreeNode getSelectedTreeNode() {
+        TreePath path = groupsTree.getSelectionPath();
+        if (path == null) {
+            return null;
+        }
+        Object last = path.getLastPathComponent();
+        if (last instanceof DefaultMutableTreeNode node) {
+            return node;
+        }
+        return null;
+    }
 
-        /*Dimension pref = searchField.getPreferredSize();
-        pref.width = 250;
-        searchField.setPreferredSize(pref);
-        searchField.setMaximumSize(pref);*/
+    private Set<String> collectGroupIds(DefaultMutableTreeNode node) {
+        Set<String> ids = new HashSet<>();
+        collectGroupIds(node, ids);
+        return ids;
+    }
 
-        return searchField;
+    private void collectGroupIds(DefaultMutableTreeNode node, Set<String> ids) {
+        if (node == null) {
+            return;
+        }
+        Object value = node.getUserObject();
+        if (value instanceof GroupModel groupModel && groupModel.getId() != null) {
+            ids.add(groupModel.getId());
+        }
+        Enumeration<?> children = node.children();
+        while (children.hasMoreElements()) {
+            Object child = children.nextElement();
+            if (child instanceof DefaultMutableTreeNode childNode) {
+                collectGroupIds(childNode, ids);
+            }
+        }
+    }
+
+    private final class NoteToGroupDropHandler implements DnDTree.ExternalDropHandler {
+
+        @Override
+        public boolean canImport(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+            if (!support.isDataFlavorSupported(NoteListTransferHandler.NOTE_FLAVOR)) {
+                return false;
+            }
+            if (target == null || childIndex != -1) {
+                return false;
+            }
+            if (target == groupsTree.getUngroupedNode()) {
+                return true;
+            }
+            return target.isRoot() || target.getUserObject() instanceof GroupModel;
+        }
+
+        @Override
+        public boolean importData(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+            try {
+                ContentModel note = (ContentModel) support.getTransferable().getTransferData(NoteListTransferHandler.NOTE_FLAVOR);
+                int index = model.indexOf(note);
+                String newGroupId = null;
+                if (target.getUserObject() instanceof GroupModel groupModel) {
+                    newGroupId = groupModel.getId();
+                }
+                if (Objects.equals(note.getGroupId(), newGroupId)) {
+                    return false;
+                }
+                note.setGroupId(newGroupId);
+                presenter.saveNote(note);
+                if (index >= 0) {
+                    model.setElementAt(note, index);
+                }
+                //refreshListForCurrentSelection();
+                noteList.clearSelection();
+                noteList.repaint();
+                return true;
+            } catch (UnsupportedFlavorException | IOException e) {
+                return false;
+            }
+        }
     }
 
     private static final class NoteListTransferHandler extends TransferHandler {
@@ -308,119 +413,4 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         }
     }
 
-    private final class NoteToGroupDropHandler implements DnDTree.ExternalDropHandler {
-
-        @Override
-        public boolean canImport(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
-            if (!support.isDataFlavorSupported(NoteListTransferHandler.NOTE_FLAVOR)) {
-                return false;
-            }
-            if (target == null || childIndex != -1) {
-                return false;
-            }
-            if (target == groupsTree.getUngroupedNode()) {
-                return true;
-            }
-            return target.isRoot() || target.getUserObject() instanceof GroupModel;
-        }
-
-        @Override
-        public boolean importData(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
-            try {
-                ContentModel note = (ContentModel) support.getTransferable().getTransferData(NoteListTransferHandler.NOTE_FLAVOR);
-                if (note == null) {
-                    return false;
-                }
-                int index = model.indexOf(note);
-                String newGroupId = null;
-                if (target.getUserObject() instanceof GroupModel groupModel) {
-                    newGroupId = groupModel.getId();
-                }
-                if (Objects.equals(note.getGroupId(), newGroupId)) {
-                    return false;
-                }
-                note.setGroupId(newGroupId);
-                presenter.saveNote(note);
-                if (index >= 0) {
-                    model.setElementAt(note, index);
-                }
-                refreshListForCurrentSelection();
-                noteList.clearSelection();
-                noteList.repaint();
-                return true;
-            } catch (UnsupportedFlavorException | IOException e) {
-                return false;
-            }
-        }
-    }
-
-    private void refreshListForCurrentSelection() {
-        model.clear();
-        if (groupsTree == null) {
-            allNotes.forEach(model::addElement);
-            return;
-        }
-        DefaultMutableTreeNode selectedNode = getSelectedTreeNode();
-        List<ContentModel> filtered = filterNotesForNode(selectedNode);
-        filtered.forEach(model::addElement);
-    }
-
-    private DefaultMutableTreeNode getSelectedTreeNode() {
-        TreePath path = groupsTree.getSelectionPath();
-        if (path == null) {
-            return null;
-        }
-        Object last = path.getLastPathComponent();
-        if (last instanceof DefaultMutableTreeNode node) {
-            return node;
-        }
-        return null;
-    }
-
-    private List<ContentModel> filterNotesForNode(DefaultMutableTreeNode node) {
-        if (allNotes == null || allNotes.isEmpty()) {
-            return List.of();
-        }
-        if (node == null || node.isRoot()) {
-            return allNotes;
-        }
-        if (node == groupsTree.getUngroupedNode()) {
-            return allNotes.stream()
-                    .filter(note -> note.getGroupId() == null || note.getGroupId().isBlank())
-                    .toList();
-        }
-        if (node.getUserObject() instanceof GroupModel) {
-            Set<String> allowedIds = collectGroupIds(node);
-            if (allowedIds.isEmpty()) {
-                return List.of();
-            }
-            return allNotes.stream()
-                    .filter(note -> note.getGroupId() != null && allowedIds.contains(note.getGroupId()))
-                    .toList();
-        }
-        return List.of();
-    }
-
-    private Set<String> collectGroupIds(DefaultMutableTreeNode node) {
-        Set<String> ids = new HashSet<>();
-        collectGroupIds(node, ids);
-        return ids;
-    }
-
-    private void collectGroupIds(DefaultMutableTreeNode node, Set<String> ids) {
-        if (node == null) {
-            return;
-        }
-        Object value = node.getUserObject();
-        if (value instanceof GroupModel groupModel && groupModel.getId() != null) {
-            ids.add(groupModel.getId());
-        }
-        Enumeration<?> children = node.children();
-        while (children.hasMoreElements()) {
-            Object child = children.nextElement();
-            if (child instanceof DefaultMutableTreeNode childNode) {
-                collectGroupIds(childNode, ids);
-            }
-        }
-    }
 }

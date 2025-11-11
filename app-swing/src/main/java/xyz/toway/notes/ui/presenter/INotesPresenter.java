@@ -2,9 +2,10 @@ package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.domain.model.ContentModel;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public interface INotesPresenter<T> extends GeneralPresenter {
 
@@ -14,7 +15,9 @@ public interface INotesPresenter<T> extends GeneralPresenter {
 
     void saveNote(ContentModel selectedNote);
 
-    void loadData();
+    CompletableFuture<List<ContentModel>> loadNotes(Collection<String> ids);
 
     void loadGroups(Consumer<List<T>> consumer);
+
+    void addNewGroup(String title);
 }

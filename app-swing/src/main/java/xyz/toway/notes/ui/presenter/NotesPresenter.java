@@ -4,7 +4,9 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.view.GeneralView;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static xyz.toway.notes.ui.Main.context;
@@ -25,7 +27,7 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
 
     @Override
     public List<ContentModel> getNotesList() {
-        return context.getNoteService().findAllLight();
+        return context.getNoteService().findAll();
     }
 
     @Override
@@ -39,9 +41,16 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
     }
 
     @Override
+    public CompletableFuture<List<ContentModel>> loadNotes(Collection<String> ids) {
+        context.getNoteService().findAll();
+        return null;
+    }
+
+
+    /*@Override
     public void loadData() {
         view.setData("notesList", getNotesList());
-    }
+    }*/
 
     @Override
     public void loadGroups(Consumer<List<GroupModel>> consumer) {
@@ -53,5 +62,10 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
         var result = List.of(model1, model2);
 
         consumer.accept(result);
+    }
+
+    @Override
+    public void addNewGroup(String title) {
+
     }
 }
