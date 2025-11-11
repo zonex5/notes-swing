@@ -21,8 +21,11 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -386,12 +389,38 @@ public class NotesWindow extends ToolWindow implements GeneralView {
                     .filter(note -> note.getGroupId() == null || note.getGroupId().isBlank())
                     .toList();
         }
-        if (node.getUserObject() instanceof GroupModel groupModel) {
-            String groupId = groupModel.getId();
+        if (node.getUserObject() instanceof GroupModel) {
+            Set<String> allowedIds = collectGroupIds(node);
+            if (allowedIds.isEmpty()) {
+                return List.of();
+            }
             return allNotes.stream()
-                    .filter(note -> Objects.equals(groupId, note.getGroupId()))
+                    .filter(note -> note.getGroupId() != null && allowedIds.contains(note.getGroupId()))
                     .toList();
         }
         return List.of();
+    }
+
+    private Set<String> collectGroupIds(DefaultMutableTreeNode node) {
+        Set<String> ids = new HashSet<>();
+        collectGroupIds(node, ids);
+        return ids;
+    }
+
+    private void collectGroupIds(DefaultMutableTreeNode node, Set<String> ids) {
+        if (node == null) {
+            return;
+        }
+        Object value = node.getUserObject();
+        if (value instanceof GroupModel groupModel && groupModel.getId() != null) {
+            ids.add(groupModel.getId());
+        }
+        Enumeration<?> children = node.children();
+        while (children.hasMoreElements()) {
+            Object child = children.nextElement();
+            if (child instanceof DefaultMutableTreeNode childNode) {
+                collectGroupIds(childNode, ids);
+            }
+        }
     }
 }
