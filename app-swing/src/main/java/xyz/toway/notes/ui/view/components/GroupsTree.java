@@ -1,19 +1,24 @@
 package xyz.toway.notes.ui.view.components;
 
+import lombok.Getter;
 import lombok.Setter;
 import xyz.toway.notes.domain.model.GroupModel;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 
 import static xyz.toway.notes.ui.Main.icon;
 
 public class GroupsTree extends DnDTree {
 
+    private static final String UNGROUPED = "<Ungrouped>";
+
     @Setter
     private ImageIcon rootIcon;
+    @Getter
     private final DefaultMutableTreeNode ungroupedNode;
 
     public GroupsTree(String rootLabel) {
@@ -30,7 +35,7 @@ public class GroupsTree extends DnDTree {
 
         rootIcon = icon("/icons/ui/root.svg", 16, 16);
 
-        ungroupedNode = addSpecialNodeUnderRoot("<Ungrouped>");
+        ungroupedNode = addSpecialNodeUnderRoot(UNGROUPED);
         ungroupedNode.setAllowsChildren(false);
 
         setCellRenderer(new DefaultTreeCellRenderer() {
@@ -55,7 +60,20 @@ public class GroupsTree extends DnDTree {
         });
     }
 
-    public DefaultMutableTreeNode getUngroupedNode() {
-        return ungroupedNode;
+    public DefaultMutableTreeNode getSelectedTreeNode() {
+        TreePath path = getSelectionPath();
+        if (path == null) {
+            return null;
+        }
+        Object last = path.getLastPathComponent();
+        if (last instanceof DefaultMutableTreeNode node) {
+            return node;
+        }
+        return null;
     }
+
+    public boolean isUngroupedNodeSelected() {
+        return getSelectedTreeNode() == getUngroupedNode();
+    }
+
 }

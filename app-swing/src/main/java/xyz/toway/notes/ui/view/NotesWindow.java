@@ -1,9 +1,6 @@
 package xyz.toway.notes.ui.view;
 
-import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchWithHistoryIcon;
 import lombok.Getter;
-import lombok.NonNull;
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.presenter.INotesPresenter;
@@ -29,16 +26,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static xyz.toway.notes.ui.Main.icon;
 
-public class NotesWindow extends ToolWindow implements GeneralView {
+public class NotesWindow extends ToolWindow implements INotesView {
 
     private INotesPresenter<GroupModel> presenter;
 
     private List<JButton> noteButtons;
     private DefaultListModel<ContentModel> model;
-    private List<ContentModel> allNotes;
     private JList<ContentModel> noteList;
     private GroupsTree groupsTree;
 
@@ -60,7 +59,6 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         noteButtons = new ArrayList<>();
         presenter = new NotesPresenter();
         presenter.setView(this);
-        allNotes = new ArrayList<>();
     }
 
     private JButton createButton(String tooltip, String iconPath, Runnable action) {
@@ -77,7 +75,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         menuBar.add(Box.createHorizontalGlue());
 
         // create toolbar buttons
-        JButton refreshButton = createButton("Refresh list", "/icons/ui/refresh.svg", () -> presenter.loadData()); // do not replace with method reference
+        JButton refreshButton = createButton("Refresh list", "/icons/ui/refresh.svg", this::loadGroups);
         JButton renameButton = createButton("Rename note", "/icons/ui/doc-edit.svg", this::renameSelectedNote);
         JButton deleteButton = createButton("Delete note", "/icons/ui/delete.svg", this::deleteSelectedNote);
 
@@ -117,32 +115,35 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         bottomPanel.setPreferredSize(new Dimension(0, 20));
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        loadData();
+        loadGroups();
 
         return panel;
     }
 
-    public void setData(String key, Object value) {
-        if (key.equals("notesList")) {
-            if (value instanceof List<?> notes) {
-                List<ContentModel> list = notes.stream()
-                        .filter(obj -> obj instanceof ContentModel)
-                        .map(obj -> (ContentModel) obj)
-                        .toList();
-                allNotes = new ArrayList<>(list);
-                refreshListForCurrentSelection();
-            } else {
-                allNotes = new ArrayList<>();
-                refreshListForCurrentSelection();
-            }
+    @Override
+    public void setNotes(List<ContentModel> notes) {
+        model.clear();
+        model.addAll(notes);
+        noteList.repaint();
+    }
+
+    @Override
+    public void setGroups(List<GroupModel> groups) {
+        groupsTree.rebuild(groups);
+        if (groupsTree.getSelectionPath() == null) {
+            groupsTree.setSelectionRow(0);
         }
+    }
+
+    private void loadGroups() {
+        presenter.loadGroups();
     }
 
     private JPanel createGroupsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         groupsTree = new GroupsTree("All Notes");
         groupsTree.setExternalDropHandler(new NoteToGroupDropHandler());
-        groupsTree.getSelectionModel().addTreeSelectionListener(e -> onGroupSelected());
+        groupsTree.getSelectionModel().addTreeSelectionListener(e -> refreshListForCurrentSelection());
         groupsTree.setSelectionRow(0);
         panel.add(groupsTree);
 
@@ -172,30 +173,36 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         return panel;
     }
 
-    private void onGroupSelected() {
-        var selectedNode = getSelectedTreeNode();
+    private void refreshListForCurrentSelection() {
+        var selectedNode = groupsTree.getSelectedTreeNode();
 
-        if (selectedNode == null || !(selectedNode.getUserObject() instanceof GroupModel)) return;
+        if (selectedNode == null) return;
 
+        // all
+        if (selectedNode.isRoot()) {
+            presenter.loadAllNotes();
+            return;
+        }
+
+        // no group
+        if (groupsTree.isUngroupedNodeSelected()) {
+            presenter.loadOrphanNotes();
+            return;
+        }
+
+        // by group
+        if (!(selectedNode.getUserObject() instanceof GroupModel)) {
+            return;
+        }
         Set<String> allowedIds = collectGroupIds(selectedNode);
+        presenter.loadNotes(allowedIds);
     }
 
     private void addNewGroup() {
         InputValueDialog.show(this, "New Group", "Input the name:", name -> {
             presenter.addNewGroup(name);
-            loadData();
-        });
-    }
-
-    private void loadData() {
-        presenter.loadGroups(data -> {
-            groupsTree.rebuild(data);
-            if (groupsTree.getSelectionPath() == null) {
-                groupsTree.setSelectionRow(0);
-            }
             refreshListForCurrentSelection();
         });
-        presenter.loadData();
     }
 
     private JPanel createNoteListPanel() {
@@ -249,7 +256,6 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         );
         if (result == JOptionPane.YES_OPTION) {
             model.removeElement(selectedNote);
-            allNotes.remove(selectedNote);
             presenter.deleteNote(selectedNote);
             noteList.repaint();
         }
@@ -274,27 +280,6 @@ public class NotesWindow extends ToolWindow implements GeneralView {
         //panel.setLayout(new FlowLayout(FlowLayout.LEFT));
         //panel.add(getSearchField());
         return panel;
-    }
-
-/*    private void refreshListForCurrentSelection() {
-        model.clear();
-        DefaultMutableTreeNode selectedNode = getSelectedTreeNode();
-        List<ContentModel> filtered = filterNotesForNode(selectedNode);
-        //filtered.forEach(model::addElement);
-    }
-
-*/
-
-    private DefaultMutableTreeNode getSelectedTreeNode() {
-        TreePath path = groupsTree.getSelectionPath();
-        if (path == null) {
-            return null;
-        }
-        Object last = path.getLastPathComponent();
-        if (last instanceof DefaultMutableTreeNode node) {
-            return node;
-        }
-        return null;
     }
 
     private Set<String> collectGroupIds(DefaultMutableTreeNode node) {
@@ -353,7 +338,7 @@ public class NotesWindow extends ToolWindow implements GeneralView {
                 if (index >= 0) {
                     model.setElementAt(note, index);
                 }
-                //refreshListForCurrentSelection();
+                refreshListForCurrentSelection();
                 noteList.clearSelection();
                 noteList.repaint();
                 return true;
@@ -412,5 +397,4 @@ public class NotesWindow extends ToolWindow implements GeneralView {
             return MOVE;
         }
     }
-
 }

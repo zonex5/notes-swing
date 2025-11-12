@@ -13,4 +13,5 @@ module xyz.toway.notes.ui {
     uses xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
     uses xyz.toway.notes.domain.port.factory.NoteRepositoryFactory;
     uses xyz.toway.notes.domain.port.factory.LastOpenedRepositoryFactory;
+    uses xyz.toway.notes.domain.port.factory.GroupRepositoryFactory;
 }

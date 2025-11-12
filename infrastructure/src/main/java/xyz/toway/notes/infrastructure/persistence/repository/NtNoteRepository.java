@@ -65,7 +65,7 @@ public class NtNoteRepository implements NoteRepository {
 
     @Override
     public List<NoteModel> findAllByParents(Collection<String> ids) {
-        return getRepository().find(where("parentId").in(ids.toArray(new String[0])))
+        return getRepository().find(where("groupId").in(ids.toArray(new String[0])))
                 .toList()
                 .stream()
                 .map(Mapper::toModel)
@@ -74,7 +74,7 @@ public class NtNoteRepository implements NoteRepository {
 
     @Override
     public List<NoteModel> findAllOrphans() {
-        return getRepository().find(where("parentId").eq(null))
+        return getRepository().find(where("groupId").eq(null))
                 .toList()
                 .stream()
                 .map(Mapper::toModel)
