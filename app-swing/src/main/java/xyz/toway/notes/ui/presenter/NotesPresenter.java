@@ -23,7 +23,6 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
         return view;
     }
 
-
     @Override
     public void deleteNote(ContentModel selectedNote) {
         context.getNoteService().delete(selectedNote);
@@ -57,7 +56,8 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
 
     @Override
     public void addNewGroup(String title) {
-
+        /*context.getNoteService().createGroup(new GroupModel(title))
+                .thenAccept(data ->)*/
     }
 
     @Override
