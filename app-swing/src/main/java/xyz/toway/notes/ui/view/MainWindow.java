@@ -9,6 +9,7 @@ import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.EventBus;
 import xyz.toway.notes.ui.presenter.IMainPresenter;
 import xyz.toway.notes.ui.presenter.MainPresenter;
+import xyz.toway.notes.ui.utils.GlobalHotkeyListener;
 import xyz.toway.notes.ui.view.components.StatusBar;
 import xyz.toway.notes.ui.view.components.TextNoteTab;
 import xyz.toway.notes.ui.view.dialogs.InputValueDialog;
@@ -92,7 +93,13 @@ public class MainWindow extends JFrame implements GeneralView {
         trayIcon.addActionListener(e -> setVisible(true));
         try {
             SystemTray.getSystemTray().add(trayIcon);
-        } catch (AWTException ex) {
+
+            GlobalHotkeyListener.register(() -> {
+                setVisible(true);
+                setState(JFrame.NORMAL);
+                toFront();
+            });
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -282,9 +289,9 @@ public class MainWindow extends JFrame implements GeneralView {
         optionsMenu.add(minimizeItem);
         menuItems.put(MINIMIZE_ON_CLOSE, minimizeItem);
 
-        JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
-        optionsMenu.add(defaultTabItem);
-        menuItems.put(OPEN_DEFAULT_NOTE, defaultTabItem);
+        //JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
+        //optionsMenu.add(defaultTabItem);
+        //menuItems.put(OPEN_DEFAULT_NOTE, defaultTabItem);
 
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
@@ -297,9 +304,9 @@ public class MainWindow extends JFrame implements GeneralView {
         restoreItem.addActionListener(e -> {
             presenter.saveSettingsFlag(RESTORE_LAST_SESSION, restoreItem.isSelected());
         });
-        defaultTabItem.addActionListener(e -> {
+        /*defaultTabItem.addActionListener(e -> {
             presenter.saveSettingsFlag(OPEN_DEFAULT_NOTE, defaultTabItem.isSelected());
-        });
+        });*/
         minimizeItem.addActionListener(e -> {
             presenter.saveSettingsFlag(MINIMIZE_ON_CLOSE, minimizeItem.isSelected());
             minimizeOnClose = minimizeItem.isSelected();
@@ -438,7 +445,7 @@ public class MainWindow extends JFrame implements GeneralView {
         menuItems.get(STATUS_BAR_VISIBLE).setSelected(settings.statusBarVisible());
         menuItems.get(MINIMIZE_ON_CLOSE).setSelected(settings.minimizeOnClose());
         menuItems.get(RESTORE_LAST_SESSION).setSelected(settings.restoreLastSession());
-        menuItems.get(OPEN_DEFAULT_NOTE).setSelected(false); // todo settings.defaultTab()
+        //menuItems.get(OPEN_DEFAULT_NOTE).setSelected(false); // todo settings.defaultTab()
 
         minimizeOnClose = settings.minimizeOnClose();
     }

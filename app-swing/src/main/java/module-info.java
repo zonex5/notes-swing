@@ -8,6 +8,7 @@ module xyz.toway.notes.ui {
     requires xyz.toway.notes.service;
 
     requires static lombok;
+    requires com.github.kwhat.jnativehook;
 
     uses xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
     uses xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
