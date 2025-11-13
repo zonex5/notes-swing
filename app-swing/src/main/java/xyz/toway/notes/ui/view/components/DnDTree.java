@@ -19,6 +19,7 @@ public class DnDTree extends JTree {
 
     // Special nodes are tracked by reference. Re-mark them if you rebuild with new node instances.
     private final Set<DefaultMutableTreeNode> specialNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+    private ExternalDropHandler externalDropHandler;
 
     public DnDTree(String rootLabel) {
         super(new DefaultTreeModel(new DefaultMutableTreeNode(rootLabel != null ? rootLabel : "Root")));
@@ -29,6 +30,10 @@ public class DnDTree extends JTree {
         setDropMode(DropMode.ON_OR_INSERT);
         setTransferHandler(new MoveHandler());
         expandRow(0);
+    }
+
+    public void setExternalDropHandler(ExternalDropHandler externalDropHandler) {
+        this.externalDropHandler = externalDropHandler;
     }
 
     // ---------- Public API ----------
@@ -173,14 +178,22 @@ public class DnDTree extends JTree {
         }
 
         @Override
-        public boolean canImport(TransferSupport s) {
+        public boolean canImport(TransferHandler.TransferSupport s) {
             if (!s.isDrop()) return false;
-            if (!s.isDataFlavorSupported(NODE_FLAVOR)) return false;
 
             JTree.DropLocation dl = (JTree.DropLocation) s.getDropLocation();
             if (dl == null || dl.getPath() == null) return false;
 
             DefaultMutableTreeNode target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
+
+            if (!s.isDataFlavorSupported(NODE_FLAVOR)) {
+                if (externalDropHandler == null) return false;
+                boolean allowed = externalDropHandler.canImport(s, target, dl.getChildIndex());
+                if (allowed) {
+                    s.setDropAction(MOVE);
+                }
+                return allowed;
+            }
 
             // Forbid drop ON a special node
             if (dl.getChildIndex() == -1 && specialNodes.contains(target)) return false;
@@ -201,8 +214,15 @@ public class DnDTree extends JTree {
         }
 
         @Override
-        public boolean importData(TransferSupport s) {
+        public boolean importData(TransferHandler.TransferSupport s) {
             if (!canImport(s)) return false;
+            if (!s.isDataFlavorSupported(NODE_FLAVOR)) {
+                if (externalDropHandler == null) return false;
+                JTree.DropLocation dl = (JTree.DropLocation) s.getDropLocation();
+                if (dl == null || dl.getPath() == null) return false;
+                DefaultMutableTreeNode target = (DefaultMutableTreeNode) dl.getPath().getLastPathComponent();
+                return externalDropHandler.importData(s, target, dl.getChildIndex());
+            }
             try {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) s.getTransferable().getTransferData(NODE_FLAVOR);
 
@@ -258,5 +278,14 @@ public class DnDTree extends JTree {
             }
             return false;
         }
+    }
+
+    @FunctionalInterface
+    public interface ExternalDropHandler {
+        default boolean canImport(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex) {
+            return true;
+        }
+
+        boolean importData(TransferHandler.TransferSupport support, DefaultMutableTreeNode target, int childIndex);
     }
 }

@@ -2,7 +2,7 @@ package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.ui.view.GeneralView;
 
-public interface GeneralPresenter {
+public interface GeneralPresenter<V extends GeneralView> {
 
     default void init() {
     }
@@ -10,7 +10,7 @@ public interface GeneralPresenter {
     default void destroy() {
     }
 
-    void setView(GeneralView view);
+    void setView(V view);
 
-    GeneralView getView();
+    V getView();
 }

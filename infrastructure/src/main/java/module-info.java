@@ -30,4 +30,7 @@ module xyz.toway.notes.infrastructure {
 
     provides xyz.toway.notes.domain.port.factory.LastOpenedRepositoryFactory
             with xyz.toway.notes.infrastructure.persistence.factory.NtLastOpenedRepositoryFactory;
+
+    provides xyz.toway.notes.domain.port.factory.GroupRepositoryFactory
+            with xyz.toway.notes.infrastructure.persistence.factory.NtGroupRepositoryFactory;
 }

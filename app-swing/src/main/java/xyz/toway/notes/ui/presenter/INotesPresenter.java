@@ -1,20 +1,25 @@
 package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.domain.model.ContentModel;
+import xyz.toway.notes.ui.view.INotesView;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-public interface INotesPresenter<T> extends GeneralPresenter {
-
-    List<ContentModel> getNotesList();
+public interface INotesPresenter<T> extends GeneralPresenter<INotesView> {
 
     void deleteNote(ContentModel selectedNote);
 
     void saveNote(ContentModel selectedNote);
 
-    void loadData();
+    void loadNotes(Collection<String> parentIds);
 
-    void loadGroups(Consumer<List<T>> consumer);
+    void loadAllNotes();
+
+    void loadOrphanNotes();
+
+    void loadGroups();
+
+    void addNewGroup(String title);
 }

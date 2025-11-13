@@ -3,6 +3,8 @@ package xyz.toway.notes.service;
 import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.domain.port.SettingsRepository;
 
+import static xyz.toway.notes.domain.port.SettingsRepository.*;
+
 public class SettingsService {
 
     private final SettingsRepository settingsRepository;
@@ -18,8 +20,9 @@ public class SettingsService {
     public StoredSettings getStoredSettings() {
         return new StoredSettings(
                 settingsRepository.getDatabaseFilePath(),
-                settingsRepository.getStatusBarVisible(),
-                settingsRepository.getRestoreLastSession()
+                settingsRepository.getBooleanValue(STATUS_BAR_VISIBLE),
+                settingsRepository.getBooleanValue(RESTORE_LAST_SESSION),
+                settingsRepository.getBooleanValue(MINIMIZE_ON_CLOSE)
         );
     }
 }

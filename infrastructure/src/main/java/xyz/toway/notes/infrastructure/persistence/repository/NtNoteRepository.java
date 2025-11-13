@@ -7,10 +7,7 @@ import xyz.toway.notes.domain.port.DatabaseRepository;
 import xyz.toway.notes.infrastructure.persistence.Mapper;
 import xyz.toway.notes.infrastructure.persistence.entity.NoteEntity;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.dizitart.no2.filters.FluentFilter.where;
 
@@ -60,6 +57,24 @@ public class NtNoteRepository implements NoteRepository {
     @Override
     public List<NoteModel> findAll() {
         return getRepository().find()
+                .toList()
+                .stream()
+                .map(Mapper::toModel)
+                .toList();
+    }
+
+    @Override
+    public List<NoteModel> findAllByParents(Collection<String> ids) {
+        return getRepository().find(where("groupId").in(ids.toArray(new String[0])))
+                .toList()
+                .stream()
+                .map(Mapper::toModel)
+                .toList();
+    }
+
+    @Override
+    public List<NoteModel> findAllOrphans() {
+        return getRepository().find(where("groupId").eq(null))
                 .toList()
                 .stream()
                 .map(Mapper::toModel)

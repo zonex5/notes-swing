@@ -1,7 +1,9 @@
 package xyz.toway.notes.infrastructure.persistence;
 
+import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.domain.model.NoteModel;
 import xyz.toway.notes.domain.types.ContentType;
+import xyz.toway.notes.infrastructure.persistence.entity.GroupEntity;
 import xyz.toway.notes.infrastructure.persistence.entity.NoteEntity;
 
 public final class Mapper {
@@ -30,6 +32,22 @@ public final class Mapper {
         entity.setSyntax(model.getSyntax());
         entity.setType(model.getContentType());
         return entity;
+    }
+
+    public static GroupEntity fromModel(GroupModel model) {
+        GroupEntity entity = new GroupEntity();
+        entity.setId(model.getId());
+        entity.setTitle(model.getTitle());
+        entity.setIcon(model.getIcon());
+        return entity;
+    }
+
+    public static GroupModel toModel(GroupEntity entity) {
+        GroupModel model = new GroupModel();
+        model.setId(entity.getId());
+        model.setTitle(entity.getTitle());
+        model.setIcon(entity.getIcon());
+        return model;
     }
 }
 

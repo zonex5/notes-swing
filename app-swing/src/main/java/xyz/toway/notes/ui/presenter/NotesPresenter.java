@@ -2,30 +2,25 @@ package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.model.GroupModel;
-import xyz.toway.notes.ui.view.GeneralView;
+import xyz.toway.notes.ui.view.INotesView;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static xyz.toway.notes.ui.Main.context;
 
 public class NotesPresenter implements INotesPresenter<GroupModel> {
 
-    private GeneralView view;
+    private INotesView view;
 
     @Override
-    public void setView(GeneralView view) {
+    public void setView(INotesView view) {
         this.view = view;
     }
 
     @Override
-    public GeneralView getView() {
+    public INotesView getView() {
         return view;
-    }
-
-    @Override
-    public List<ContentModel> getNotesList() {
-        return context.getNoteService().findAllLight();
     }
 
     @Override
@@ -39,19 +34,43 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
     }
 
     @Override
-    public void loadData() {
-        view.setData("notesList", getNotesList());
+    public void loadNotes(Collection<String> parentIds) {
+        context.getNoteService()
+                .findAllByParents(parentIds)
+                .thenAccept(data -> view.setNotes(data));
     }
 
     @Override
-    public void loadGroups(Consumer<List<GroupModel>> consumer) {
-        GroupModel model1 = new GroupModel("1", "Odin", "home");
-        GroupModel model2 = new GroupModel("2", "Dva", "home");
-        GroupModel model3 = new GroupModel("3", "Tri", "home");
-        model2.addChild(model3);
+    public void loadAllNotes() {
+        context.getNoteService()
+                .findAll()
+                .thenAccept(data -> view.setNotes(data));
+    }
 
-        var result = List.of(model1, model2);
+    @Override
+    public void loadOrphanNotes() {
+        context.getNoteService()
+                .findAllOrphans()
+                .thenAccept(data -> view.setNotes(data));
+    }
 
-        consumer.accept(result);
+    @Override
+    public void addNewGroup(String title) {
+        /*context.getNoteService().createGroup(new GroupModel(title))
+                .thenAccept(data ->)*/
+    }
+
+    @Override
+    public void loadGroups() {
+        //GroupModel model1 = new GroupModel("1", "Odin", "home");
+        //GroupModel model2 = new GroupModel("2", "Dva", "home");
+        //GroupModel model3 = new GroupModel("3", "Tri", "home");
+        //model2.addChild(model3);
+        //var result = List.of(model1, model2);
+        //view.setGroups(result);
+
+        context.getNoteService()
+                .loadGroups()
+                .thenAccept(data -> view.setGroups(data));
     }
 }

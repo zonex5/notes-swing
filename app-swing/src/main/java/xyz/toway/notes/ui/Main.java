@@ -4,14 +4,8 @@ import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import lombok.NonNull;
-import xyz.toway.notes.domain.port.LastOpenedRepository;
-import xyz.toway.notes.domain.port.NoteRepository;
-import xyz.toway.notes.domain.port.DatabaseRepository;
-import xyz.toway.notes.domain.port.SettingsRepository;
-import xyz.toway.notes.domain.port.factory.LastOpenedRepositoryFactory;
-import xyz.toway.notes.domain.port.factory.NoteRepositoryFactory;
-import xyz.toway.notes.domain.port.factory.DatabaseRepositoryFactory;
-import xyz.toway.notes.domain.port.factory.SettingsRepositoryFactory;
+import xyz.toway.notes.domain.port.*;
+import xyz.toway.notes.domain.port.factory.*;
 import xyz.toway.notes.service.DatabaseService;
 import xyz.toway.notes.service.NoteService;
 import xyz.toway.notes.service.SettingsService;
@@ -41,9 +35,7 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             var presenter = new MainPresenter();
-            MainWindow form = new MainWindow(presenter);
-            //presenter.setView(form);
-            //presenter.init();
+            new MainWindow(presenter);
         });
     }
 
@@ -77,9 +69,13 @@ public class Main {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No provider found"))
                 .create(databaseRepository);
+        GroupRepository groupRepository = ServiceLoader.load(GroupRepositoryFactory.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No provider found"))
+                .create(databaseRepository);
         return new ApplicationContext(
                 new DatabaseService(databaseRepository),
-                new NoteService(noteRepository, lastOpenedRepository),
+                new NoteService(noteRepository, groupRepository, lastOpenedRepository),
                 new SettingsService(settingsRepository),
                 new UtilsService()
         );
