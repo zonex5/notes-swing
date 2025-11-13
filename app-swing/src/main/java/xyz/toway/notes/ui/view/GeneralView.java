@@ -23,4 +23,7 @@ public interface GeneralView {
 
     default void openDocument(ContentModel contentModel) {
     }
+
+    default void refresh() {
+    }
 }

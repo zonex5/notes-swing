@@ -4,8 +4,6 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.ui.view.INotesView;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
 
 public interface INotesPresenter<T> extends GeneralPresenter<INotesView> {
 

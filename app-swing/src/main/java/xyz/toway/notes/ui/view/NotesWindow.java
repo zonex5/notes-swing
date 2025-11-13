@@ -135,6 +135,11 @@ public class NotesWindow extends ToolWindow implements INotesView {
         }
     }
 
+    @Override
+    public void refresh() {
+        loadGroups();
+    }
+
     private void loadGroups() {
         presenter.loadGroups();
     }
@@ -196,12 +201,14 @@ public class NotesWindow extends ToolWindow implements INotesView {
         }
         Set<String> allowedIds = collectGroupIds(selectedNode);
         presenter.loadNotes(allowedIds);
+
+        revalidate();
+        repaint();
     }
 
     private void addNewGroup() {
-        InputValueDialog.show(this, "New Group", "Input the name:", name -> {
+        InputValueDialog.show(this, "Input the name:", "New Group", name -> {
             presenter.addNewGroup(name);
-            refreshListForCurrentSelection();
         });
     }
 

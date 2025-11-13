@@ -62,7 +62,7 @@ public class OpenItemCellRenderer extends JPanel implements ListCellRenderer<Con
         Color secondary = UIManager.getColor("Label.disabledForeground");
         subtitleLabel.setForeground(secondary);
 
-        iconLabel.setIcon(icon("/icons/ui/doc.svg", 20, 20));
+        iconLabel.setIcon(icon("/icons/ui/note.svg", 18, 20));
         titleLabel.setText(title);
         subtitleLabel.setText(value.getContentPreview());
 

@@ -9,6 +9,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.util.Objects;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -28,8 +29,8 @@ public class GroupsTree extends DnDTree {
         UIManager.put("Tree.selectionForeground", Color.BLACK);
         UIManager.put("Tree.rowHeight", 28);
 
-        UIManager.put("Tree.dropCellBackground", Color.GREEN);
-        UIManager.put("Tree.dropCellForeground", Color.BLUE);
+        UIManager.put("Tree.dropCellBackground", Color.LIGHT_GRAY);
+        UIManager.put("Tree.dropCellForeground", Color.WHITE);
 
         SwingUtilities.updateComponentTreeUI(this);
 
@@ -47,11 +48,12 @@ public class GroupsTree extends DnDTree {
                     setIcon(rootIcon);
                 } else {
                     if (!node.getAllowsChildren()) {
-                        setIcon(icon("/icons/app/default.svg", 16, 16));
+                        setIcon(icon("/icons/ui/ungrouped.svg", 16, 16));
                     }
                     if (node.getUserObject() instanceof GroupModel groupModel) {
                         var iconText = groupModel.getIcon() != null && !groupModel.getIcon().isEmpty() ? groupModel.getIcon() : null;
-                        setIcon(icon("/icons/app/" + iconText + ".svg", 16, 16));
+                        var icon = iconText != null ? icon("/icons/app/" + iconText + ".svg", 16, 16) : null;
+                        setIcon(Objects.requireNonNullElse(icon, icon("/icons/ui/groups.svg")));
                         setText(groupModel.getTitle());
                     }
                 }

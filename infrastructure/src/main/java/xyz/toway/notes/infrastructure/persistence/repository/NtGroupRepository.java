@@ -7,10 +7,7 @@ import xyz.toway.notes.domain.port.GroupRepository;
 import xyz.toway.notes.infrastructure.persistence.Mapper;
 import xyz.toway.notes.infrastructure.persistence.entity.GroupEntity;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.dizitart.no2.filters.FluentFilter.where;
 
@@ -57,6 +54,7 @@ public class NtGroupRepository implements GroupRepository {
                 .toList()
                 .stream()
                 .map(Mapper::toModel)
+                .sorted(Comparator.comparing(GroupModel::getTitle))
                 .toList();
     }
 

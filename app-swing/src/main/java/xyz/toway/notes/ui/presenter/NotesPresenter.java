@@ -5,7 +5,6 @@ import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.view.INotesView;
 
 import java.util.Collection;
-import java.util.List;
 
 import static xyz.toway.notes.ui.Main.context;
 
@@ -56,19 +55,13 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
 
     @Override
     public void addNewGroup(String title) {
-        /*context.getNoteService().createGroup(new GroupModel(title))
-                .thenAccept(data ->)*/
+        context.getNoteService()
+                .createGroup(new GroupModel(title))
+                .thenAccept(model -> view.refresh());
     }
 
     @Override
     public void loadGroups() {
-        //GroupModel model1 = new GroupModel("1", "Odin", "home");
-        //GroupModel model2 = new GroupModel("2", "Dva", "home");
-        //GroupModel model3 = new GroupModel("3", "Tri", "home");
-        //model2.addChild(model3);
-        //var result = List.of(model1, model2);
-        //view.setGroups(result);
-
         context.getNoteService()
                 .loadGroups()
                 .thenAccept(data -> view.setGroups(data));

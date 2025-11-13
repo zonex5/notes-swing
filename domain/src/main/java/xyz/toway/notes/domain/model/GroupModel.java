@@ -31,6 +31,11 @@ public class GroupModel {
         this.title = title;
     }
 
+    public GroupModel(String title, String icon) {
+        this.title = title;
+        this.icon = icon;
+    }
+
     public void addChild(GroupModel child) {
         if (!children.contains(child)) {
             children.add(child);

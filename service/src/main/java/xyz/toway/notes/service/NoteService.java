@@ -84,9 +84,9 @@ public class NoteService {
                 });
     }
 
-    /*public CompletableFuture<GroupModel> createGroup(GroupModel model) {
-        groupRepository.create()
-    }*/
+    public CompletableFuture<GroupModel> createGroup(GroupModel model) {
+        return CompletableFuture.supplyAsync(() -> groupRepository.create(model));
+    }
 
     public void saveLastOpenedDocs(@NonNull List<String> ids) {
         lastOpenedRepository.saveLastOpenedNotes(ids);
