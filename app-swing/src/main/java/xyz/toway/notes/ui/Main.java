@@ -35,9 +35,7 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             var presenter = new MainPresenter();
-            MainWindow form = new MainWindow(presenter);
-            //presenter.setView(form);
-            //presenter.init();
+            new MainWindow(presenter);
         });
     }
 

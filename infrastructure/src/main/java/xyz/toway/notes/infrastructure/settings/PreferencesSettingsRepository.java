@@ -7,16 +7,14 @@ import java.util.prefs.Preferences;
 
 public class PreferencesSettingsRepository implements SettingsRepository {
 
-    private static final String DB_FILE_PATH = "database-file-path";
-    private static final String STATUS_BAR_VISIBLE = "status-bar-visible";
-    private static final String RESTORE_LAST_SESSION = "restore-last-session";
+    private final static String DB_FILE_PATH = "database-file-path";
 
     private final Preferences prefs = Preferences.userRoot().node("mysupernotes");
 
     public PreferencesSettingsRepository() {
     }
 
-    @Override
+   @Override
     public Optional<String> getDatabaseFilePath() {
         return Optional.ofNullable(prefs.get(DB_FILE_PATH, null));
     }
@@ -26,7 +24,7 @@ public class PreferencesSettingsRepository implements SettingsRepository {
         prefs.put(DB_FILE_PATH, path);
     }
 
-    @Override
+ /*    @Override
     public boolean getStatusBarVisible() {
         return prefs.getBoolean(STATUS_BAR_VISIBLE, true);
     }
@@ -44,5 +42,35 @@ public class PreferencesSettingsRepository implements SettingsRepository {
     @Override
     public void setRestoreLastSession(boolean flag) {
         prefs.putBoolean(RESTORE_LAST_SESSION, flag);
+    }
+
+    @Override
+    public boolean getMinimizeOnClose() {
+        return prefs.getBoolean(MINIMIZE_ON_CLOSE, true);
+    }
+
+    @Override
+    public void setMinimizeOnClose(boolean flag) {
+        prefs.putBoolean(MINIMIZE_ON_CLOSE, flag);
+    }*/
+
+    @Override
+    public void setBooleanValue(String name, boolean flag) {
+        prefs.putBoolean(name, flag);
+    }
+
+    @Override
+    public boolean getBooleanValue(String name) {
+        return prefs.getBoolean(name, false);
+    }
+
+    @Override
+    public void setStringValue(String name, String value) {
+        prefs.put(name, value);
+    }
+
+    @Override
+    public String getStringValue(String name) {
+        return prefs.get(name, null);
     }
 }

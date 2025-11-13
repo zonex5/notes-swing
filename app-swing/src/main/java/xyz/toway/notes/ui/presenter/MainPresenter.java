@@ -1,6 +1,7 @@
 package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.domain.model.ContentModel;
+import xyz.toway.notes.domain.port.SettingsRepository;
 import xyz.toway.notes.ui.view.GeneralView;
 
 import javax.swing.*;
@@ -53,10 +54,7 @@ public class MainPresenter implements IMainPresenter {
 
     @Override
     public void saveSettingsFlag(String name, boolean flag) {
-        switch (name) {
-            case "statusBarVisible" -> context.getSettingsService().getSettingsRepo().setStatusBarVisible(flag);
-            case "restoreLastSession" -> context.getSettingsService().getSettingsRepo().setRestoreLastSession(flag);
-        }
+        context.getSettingsService().getSettingsRepo().setBooleanValue(name, flag);
     }
 
     @Override
@@ -83,7 +81,7 @@ public class MainPresenter implements IMainPresenter {
             view.setData("open-success", true);
 
             // load last opened docs if setting enabled
-            if (context.getSettingsService().getSettingsRepo().getRestoreLastSession()) {
+            if (context.getSettingsService().getSettingsRepo().getBooleanValue(SettingsRepository.RESTORE_LAST_SESSION)) {
                 context.getNoteService().getLastOpenedDocs()
                         .forEach(model -> view.openDocument(model));
             }

@@ -1,6 +1,7 @@
 package xyz.toway.notes.ui.presenter;
 
 import xyz.toway.notes.domain.model.ContentModel;
+import xyz.toway.notes.domain.model.StoredSettings;
 import xyz.toway.notes.ui.view.GeneralView;
 
 import java.io.File;

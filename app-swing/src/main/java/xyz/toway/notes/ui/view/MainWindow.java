@@ -27,12 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static xyz.toway.notes.domain.port.SettingsRepository.*;
 import static xyz.toway.notes.ui.Main.icon;
 
 public class MainWindow extends JFrame implements GeneralView {
+
+    private final static String APP_TITLE = "My Super Notes";
 
     private final IMainPresenter presenter;
 
@@ -43,13 +45,15 @@ public class MainWindow extends JFrame implements GeneralView {
 
     private final Map<String, JCheckBoxMenuItem> menuItems = new HashMap<>();
 
+    private boolean minimizeOnClose;
+
     public MainWindow(MainPresenter presenter) {
         this.presenter = presenter;
         presenter.setView(this);
 
         createUI();
 
-        setTitle("My Super Notes");
+        setTitle(APP_TITLE);
         setContentPane(mainPanel);
         setJMenuBar(createMenuBar());
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -57,7 +61,7 @@ public class MainWindow extends JFrame implements GeneralView {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-        setIconImages(List.of(icon("/icons/ui/icon.svg", 16, 16).getImage()));
+        setIconImages(List.of(Objects.requireNonNull(icon("/icons/ui/icon.svg", 16, 16)).getImage()));
 
         // window listeners
         addWindowListener(new WindowAdapter() {
@@ -73,6 +77,24 @@ public class MainWindow extends JFrame implements GeneralView {
 
         // initialize presenter
         presenter.init();
+
+        // create tray icon
+        PopupMenu popup = new PopupMenu();
+        MenuItem openItem = new MenuItem("Open");
+        openItem.addActionListener(e -> setVisible(true));
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.addActionListener(e -> closeWindow());
+        popup.add(openItem);
+        popup.add(exitItem);
+
+        TrayIcon trayIcon = new TrayIcon(Objects.requireNonNull(icon("/icons/ui/icon.svg")).getImage(), APP_TITLE, popup);
+        trayIcon.setImageAutoSize(true);
+        trayIcon.addActionListener(e -> setVisible(true));
+        try {
+            SystemTray.getSystemTray().add(trayIcon);
+        } catch (AWTException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void onWindowClosing(WindowEvent e) {
@@ -80,7 +102,11 @@ public class MainWindow extends JFrame implements GeneralView {
         saveOpenTabs();
 
         // close window
-        closeWindow();
+        if (minimizeOnClose) {
+            setVisible(false);
+        } else {
+            closeWindow();
+        }
     }
 
     private void closeWindow() {
@@ -243,32 +269,40 @@ public class MainWindow extends JFrame implements GeneralView {
         JCheckBoxMenuItem statusBarItem = new JCheckBoxMenuItem("Show Status Bar");
         viewMenu.add(statusBarItem);
         menuBar.add(viewMenu);
-        menuItems.put("showStatusBar", statusBarItem);
+        menuItems.put(STATUS_BAR_VISIBLE, statusBarItem);
 
         JMenu optionsMenu = new JMenu("Options");
         menuBar.add(optionsMenu);
 
         JCheckBoxMenuItem restoreItem = new JCheckBoxMenuItem("Restore Last Session");
         optionsMenu.add(restoreItem);
-        menuItems.put("restoreLastSession", restoreItem);
+        menuItems.put(RESTORE_LAST_SESSION, restoreItem);
+
+        JCheckBoxMenuItem minimizeItem = new JCheckBoxMenuItem("Minimize On Close");
+        optionsMenu.add(minimizeItem);
+        menuItems.put(MINIMIZE_ON_CLOSE, minimizeItem);
 
         JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
         optionsMenu.add(defaultTabItem);
-        menuItems.put("defaultTab", defaultTabItem);
+        menuItems.put(OPEN_DEFAULT_NOTE, defaultTabItem);
 
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
 
         //---- callbacks
         statusBarItem.addActionListener(e -> {
-            presenter.saveSettingsFlag("statusBarVisible", statusBarItem.isSelected());
+            presenter.saveSettingsFlag(STATUS_BAR_VISIBLE, statusBarItem.isSelected());
             showStatusBar(statusBarItem.isSelected());
         });
         restoreItem.addActionListener(e -> {
-            presenter.saveSettingsFlag("restoreLastSession", restoreItem.isSelected());
+            presenter.saveSettingsFlag(RESTORE_LAST_SESSION, restoreItem.isSelected());
         });
         defaultTabItem.addActionListener(e -> {
-            presenter.saveSettingsFlag("defaultTab", defaultTabItem.isSelected());
+            presenter.saveSettingsFlag(OPEN_DEFAULT_NOTE, defaultTabItem.isSelected());
+        });
+        minimizeItem.addActionListener(e -> {
+            presenter.saveSettingsFlag(MINIMIZE_ON_CLOSE, minimizeItem.isSelected());
+            minimizeOnClose = minimizeItem.isSelected();
         });
 
         return menuBar;
@@ -401,9 +435,12 @@ public class MainWindow extends JFrame implements GeneralView {
     @Override
     public void applySettings(StoredSettings settings) {
         showStatusBar(settings.statusBarVisible());
-        menuItems.get("showStatusBar").setSelected(settings.statusBarVisible());
-        menuItems.get("restoreLastSession").setSelected(settings.restoreLastSession());
-        menuItems.get("defaultTab").setSelected(false); // todo settings.defaultTab()
+        menuItems.get(STATUS_BAR_VISIBLE).setSelected(settings.statusBarVisible());
+        menuItems.get(MINIMIZE_ON_CLOSE).setSelected(settings.minimizeOnClose());
+        menuItems.get(RESTORE_LAST_SESSION).setSelected(settings.restoreLastSession());
+        menuItems.get(OPEN_DEFAULT_NOTE).setSelected(false); // todo settings.defaultTab()
+
+        minimizeOnClose = settings.minimizeOnClose();
     }
 
     @Override
