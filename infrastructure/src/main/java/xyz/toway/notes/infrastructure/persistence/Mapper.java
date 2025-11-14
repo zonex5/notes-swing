@@ -39,6 +39,7 @@ public final class Mapper {
         entity.setId(model.getId());
         entity.setTitle(model.getTitle());
         entity.setIcon(model.getIcon());
+        entity.setParentId(model.getParentId());
         return entity;
     }
 
@@ -47,6 +48,7 @@ public final class Mapper {
         model.setId(entity.getId());
         model.setTitle(entity.getTitle());
         model.setIcon(entity.getIcon());
+        model.setParentId(entity.getParentId());
         return model;
     }
 }

@@ -1,5 +1,6 @@
 package xyz.toway.notes.ui.view.components;
 
+import lombok.Setter;
 import xyz.toway.notes.domain.model.GroupModel;
 
 import javax.swing.*;
@@ -7,6 +8,8 @@ import javax.swing.tree.*;
 import java.awt.datatransfer.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * JTree with MOVE DnD and a single rebuild(List<GroupModel>) entrypoint.
@@ -19,7 +22,11 @@ public class DnDTree extends JTree {
 
     // Special nodes are tracked by reference. Re-mark them if you rebuild with new node instances.
     private final Set<DefaultMutableTreeNode> specialNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+    @Setter
     private ExternalDropHandler externalDropHandler;
+
+    @Setter
+    private BiConsumer<GroupModel, GroupModel> onMoveDone;
 
     public DnDTree(String rootLabel) {
         super(new DefaultTreeModel(new DefaultMutableTreeNode(rootLabel != null ? rootLabel : "Root")));
@@ -29,10 +36,6 @@ public class DnDTree extends JTree {
         setDropMode(DropMode.ON_OR_INSERT);
         setTransferHandler(new MoveHandler());
         expandRow(0);
-    }
-
-    public void setExternalDropHandler(ExternalDropHandler externalDropHandler) {
-        this.externalDropHandler = externalDropHandler;
     }
 
     // ---------- Public API ----------
@@ -257,6 +260,13 @@ public class DnDTree extends JTree {
                 TreePath newPath = new TreePath(m.getPathToRoot(node));
                 t.scrollPathToVisible(newPath);
                 t.setSelectionPath(newPath);
+
+                if (onMoveDone != null
+                        && node.getUserObject() instanceof GroupModel targetModel
+                        && newParent.getUserObject() instanceof GroupModel parentModel) {
+                    onMoveDone.accept(targetModel, parentModel);
+                }
+
                 return true;
             } catch (UnsupportedFlavorException | IOException e) {
                 e.printStackTrace();
@@ -272,7 +282,7 @@ public class DnDTree extends JTree {
         private boolean isDescendant(DefaultMutableTreeNode a, DefaultMutableTreeNode b) {
             if (a == null || b == null) return false;
             if (a == b) return true;
-            for (TreeNode n = b.getParent(); n != null; n = ((DefaultMutableTreeNode) n).getParent()) {
+            for (TreeNode n = b.getParent(); n != null; n = n.getParent()) {
                 if (n == a) return true;
             }
             return false;

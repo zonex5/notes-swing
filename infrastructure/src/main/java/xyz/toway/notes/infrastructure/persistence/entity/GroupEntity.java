@@ -11,4 +11,5 @@ public class GroupEntity {
     private String id;
     private String title;
     private String icon;
+    private String parentId;
 }

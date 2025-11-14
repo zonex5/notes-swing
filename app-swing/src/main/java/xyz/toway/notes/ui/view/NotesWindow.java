@@ -186,6 +186,10 @@ public class NotesWindow extends ToolWindow implements INotesView {
                 }
             }
         });
+        groupsTree.setOnMoveDone((target, parent) -> {
+            target.setParentId(parent.getId());
+            presenter.saveGroup(target);
+        });
 
         return panel;
     }
@@ -291,7 +295,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
     }
 
     private GroupModel getSelectedGroup() {
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) groupsTree.getLastSelectedPathComponent();
+        DefaultMutableTreeNode selectedNode = groupsTree.getSelectedTreeNode();
         if (selectedNode != null && selectedNode.getUserObject() instanceof GroupModel group) {
             return group;
         }
@@ -363,7 +367,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
     }
 
     private Set<String> collectGroupIdsFromSelected() {
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) groupsTree.getLastSelectedPathComponent();
+        DefaultMutableTreeNode selectedNode = groupsTree.getSelectedTreeNode();
         if (selectedNode == null) {
             return new HashSet<>();
         }

@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class NoteService {
 
@@ -78,7 +79,7 @@ public class NoteService {
     }
 
     public CompletableFuture<List<GroupModel>> loadGroups() {
-        return CompletableFuture.supplyAsync(groupRepository::findAll, executor)
+        return CompletableFuture.supplyAsync(() -> buildGroupTree(groupRepository.findAll()), executor)
                 .exceptionally(ex -> {
                     System.err.println("Error loading groups: " + ex.getMessage());
                     return Collections.emptyList();
@@ -129,5 +130,44 @@ public class NoteService {
         return src.stream()
                 .map(note -> (ContentModel) note)
                 .toList();
+    }
+
+    public List<GroupModel> buildGroupTree(List<GroupModel> allGroups) {
+        if (allGroups == null || allGroups.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Map id -> group
+        Map<String, GroupModel> byId = allGroups.stream()
+                .filter(g -> g.getId() != null)
+                .collect(Collectors.toMap(GroupModel::getId, g -> g));
+
+        // Clear children lists before building tree
+        for (GroupModel g : allGroups) {
+            g.clearChildren();
+        }
+
+        List<GroupModel> roots = new ArrayList<>();
+
+        for (GroupModel group : allGroups) {
+            String parentId = group.getParentId();
+
+            // No parent specified -> root
+            if (parentId == null || parentId.isBlank()) {
+                roots.add(group);
+                continue;
+            }
+
+            GroupModel parent = byId.get(parentId);
+
+            // Parent not found -> treat as root
+            if (parent == null) {
+                roots.add(group);
+            } else {
+                parent.addChild(group);
+            }
+        }
+
+        return roots;
     }
 }

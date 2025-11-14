@@ -15,8 +15,6 @@ public class GroupModel {
     private String id;
     private String title;
     private String icon;
-
-    @Setter(AccessLevel.NONE)
     private String parentId;
 
     private List<GroupModel> children = new ArrayList<>();
