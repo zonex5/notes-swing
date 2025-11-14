@@ -94,6 +94,11 @@ public class NtNoteRepository implements NoteRepository {
     }
 
     @Override
+    public void deleteAllByGroupId(String groupId) {
+        getRepository().remove(where("groupId").eq(groupId));
+    }
+
+    @Override
     public List<NoteModel> findByGroupId(String groupId) {
         return getRepository().find(where("groupId").eq(groupId))
                 .toList()

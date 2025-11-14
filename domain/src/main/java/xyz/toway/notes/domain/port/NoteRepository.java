@@ -12,4 +12,6 @@ public interface NoteRepository extends CRUDRepository<NoteModel, String> {
     List<NoteModel> findAllByParents(Collection<String> ids);
 
     List<NoteModel> findAllOrphans();
+
+    void deleteAllByGroupId(String groupId);
 }

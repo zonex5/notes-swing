@@ -24,12 +24,12 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
 
     @Override
     public void deleteNote(ContentModel selectedNote) {
-        context.getNoteService().delete(selectedNote);
+        context.getNoteService().deleteNote(selectedNote);
     }
 
     @Override
     public void saveNote(ContentModel selectedNote) {
-        context.getNoteService().save(selectedNote);
+        context.getNoteService().saveNote(selectedNote);
     }
 
     @Override
@@ -57,6 +57,20 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
     public void addNewGroup(String title) {
         context.getNoteService()
                 .createGroup(new GroupModel(title))
+                .thenAccept(model -> view.refresh());
+    }
+
+    @Override
+    public void saveGroup(GroupModel group) {
+        context.getNoteService()
+                .saveGroup(group)
+                .thenAccept(model -> view.refresh());
+    }
+
+    @Override
+    public void deleteGroup(GroupModel group) {
+        context.getNoteService()
+                .deleteGroup(group)
                 .thenAccept(model -> view.refresh());
     }
 

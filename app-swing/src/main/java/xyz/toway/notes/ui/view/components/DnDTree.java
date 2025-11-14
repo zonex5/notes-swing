@@ -25,7 +25,6 @@ public class DnDTree extends JTree {
         super(new DefaultTreeModel(new DefaultMutableTreeNode(rootLabel != null ? rootLabel : "Root")));
         setRootVisible(true);
         setShowsRootHandles(true);
-        getSelectionModel().setSelectionMode(TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
         setDragEnabled(true);
         setDropMode(DropMode.ON_OR_INSERT);
         setTransferHandler(new MoveHandler());

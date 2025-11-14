@@ -12,7 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -31,7 +34,7 @@ public class NoteService {
         this.lastOpenedRepository = lastOpenedRepository;
     }
 
-    public ContentModel save(@NonNull ContentModel model) {
+    public ContentModel saveNote(@NonNull ContentModel model) {
         if (model instanceof NoteModel noteModel) {
             if (noteModel.getId() == null) {
                 return noteRepository.create(noteModel);
@@ -43,7 +46,7 @@ public class NoteService {
         return null;
     }
 
-    public void delete(@NonNull ContentModel model) {
+    public void deleteNote(@NonNull ContentModel model) {
         if (model instanceof NoteModel noteModel) {
             noteRepository.delete(noteModel.getId());
         }
@@ -104,6 +107,17 @@ public class NoteService {
 
     public void saveNoteAsTextFile(String text, File selectedFile) throws IOException {
         Files.writeString(selectedFile.toPath(), text);
+    }
+
+    public CompletableFuture<Void> saveGroup(GroupModel group) {
+        return CompletableFuture.runAsync(() -> groupRepository.update(group));
+    }
+
+    public CompletableFuture<Void> deleteGroup(GroupModel group) {
+        return CompletableFuture.runAsync(() -> {
+            groupRepository.update(group);
+            noteRepository.deleteAllByGroupId(group.getParentId());
+        });
     }
 
     private List<ContentModel> toContentList(List<NoteModel> src) {

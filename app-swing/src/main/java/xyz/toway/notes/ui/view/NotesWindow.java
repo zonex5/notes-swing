@@ -157,6 +157,14 @@ public class NotesWindow extends ToolWindow implements INotesView {
         itemInfo.addActionListener(e -> addNewGroup());
         rootMenu.add(itemInfo);
 
+        JPopupMenu nodeMenu = new JPopupMenu();
+        JMenuItem titleItem = new JMenuItem("Rename group", icon("/icons/ui/doc-edit.svg"));
+        titleItem.addActionListener(e -> renameGroup());
+        nodeMenu.add(titleItem);
+        JMenuItem deleteItem = new JMenuItem("Delete group", icon("/icons/ui/delete.svg"));
+        deleteItem.addActionListener(e -> deleteGroup());
+        nodeMenu.add(deleteItem);
+
         // Add mouse listener
         groupsTree.addMouseListener(new MouseAdapter() {
             @Override
@@ -169,6 +177,13 @@ public class NotesWindow extends ToolWindow implements INotesView {
                         // Show menu only for root node
                         if (node.isRoot()) {
                             rootMenu.show(groupsTree, e.getX(), e.getY());
+                            return;
+                        }
+                        if (node.getUserObject() instanceof GroupModel) {
+                            groupsTree.setSelectionPath(path);
+                            groupsTree.scrollPathToVisible(path);
+                            nodeMenu.show(groupsTree, e.getX(), e.getY());
+                            return;
                         }
                     }
                 }
@@ -212,6 +227,35 @@ public class NotesWindow extends ToolWindow implements INotesView {
         });
     }
 
+    private void renameGroup() {
+        var group = getActionGroup();
+        if (group == null) {
+            return;
+        }
+        InputValueDialog.show(this, "Input the new name:", group.getTitle(), name -> {
+            if (group.getTitle().equals(name)) return;
+            group.setTitle(name);
+            presenter.saveGroup(group);
+        });
+    }
+
+    private void deleteGroup() {
+        var group = getActionGroup();
+        if (group == null) {
+            return;
+        }
+        // show confirm dialog
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to delete the group '" + group.getTitle() + "' ? All entries in this group will also be deleted.", "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+        if (result == JOptionPane.YES_OPTION) {
+            presenter.deleteGroup(group);
+        }
+    }
+
     private JPanel createNoteListPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -244,6 +288,14 @@ public class NotesWindow extends ToolWindow implements INotesView {
         int index = noteList.getSelectedIndex();
         if (index >= 0) {
             return noteList.getModel().getElementAt(index);
+        }
+        return null;
+    }
+
+    private GroupModel getActionGroup() {
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) groupsTree.getLastSelectedPathComponent();
+        if (selectedNode != null && selectedNode.getUserObject() instanceof GroupModel group) {
+            return group;
         }
         return null;
     }

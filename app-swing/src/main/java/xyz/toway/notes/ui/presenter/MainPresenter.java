@@ -4,7 +4,6 @@ import xyz.toway.notes.domain.model.ContentModel;
 import xyz.toway.notes.domain.port.SettingsRepository;
 import xyz.toway.notes.ui.view.GeneralView;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.List;
 
@@ -112,7 +111,7 @@ public class MainPresenter implements IMainPresenter {
     }
 
     public ContentModel save(ContentModel model) {
-        return context.getNoteService().save(model);
+        return context.getNoteService().saveNote(model);
     }
 
     public void saveOpenedDocs(List<String> ids) {

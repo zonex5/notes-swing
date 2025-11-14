@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.util.Objects;
 
@@ -33,6 +34,8 @@ public class GroupsTree extends DnDTree {
         UIManager.put("Tree.dropCellForeground", Color.WHITE);
 
         SwingUtilities.updateComponentTreeUI(this);
+
+        getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
         rootIcon = icon("/icons/ui/root.svg", 16, 16);
 
