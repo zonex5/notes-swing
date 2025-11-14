@@ -80,7 +80,7 @@ public class DnDTree extends JTree {
      */
     public DefaultMutableTreeNode addSpecialNodeUnderRoot(String label) {
         DefaultMutableTreeNode n = new DefaultMutableTreeNode(label);
-        model().insertNodeInto(n, root(), root().getChildCount());
+        model().insertNodeInto(n, root(), 0);
         addSpecialNode(n);
         return n;
     }
