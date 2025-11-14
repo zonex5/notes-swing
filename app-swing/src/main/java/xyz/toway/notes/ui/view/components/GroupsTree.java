@@ -16,12 +16,14 @@ import static xyz.toway.notes.ui.Main.icon;
 
 public class GroupsTree extends DnDTree {
 
-    private static final String UNGROUPED = "<Ungrouped>";
+    private static final String UNGROUPED = "[Ungrouped]";
+    private static final String ALL = "[All Notes]";
 
-    @Setter
-    private ImageIcon rootIcon;
     @Getter
     private final DefaultMutableTreeNode ungroupedNode;
+
+    @Getter
+    private final DefaultMutableTreeNode allNode;
 
     public GroupsTree(String rootLabel) {
         super(rootLabel);
@@ -37,28 +39,26 @@ public class GroupsTree extends DnDTree {
 
         getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
-        rootIcon = icon("/icons/ui/root.svg", 16, 16);
-
         ungroupedNode = addSpecialNodeUnderRoot(UNGROUPED);
         ungroupedNode.setAllowsChildren(false);
+
+        allNode = addSpecialNodeUnderRoot(ALL);
+        allNode.setAllowsChildren(false);
 
         setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
             public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
                 Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-                if (node.isRoot()) {
-                    setIcon(rootIcon);
-                } else {
-                    if (!node.getAllowsChildren()) {
-                        setIcon(icon("/icons/ui/ungrouped.svg", 16, 16));
-                    }
-                    if (node.getUserObject() instanceof GroupModel groupModel) {
-                        var iconText = groupModel.getIcon() != null && !groupModel.getIcon().isEmpty() ? groupModel.getIcon() : null;
-                        var icon = iconText != null ? icon("/icons/app/" + iconText + ".svg", 16, 16) : null;
-                        setIcon(Objects.requireNonNullElse(icon, icon("/icons/ui/groups.svg")));
-                        setText(groupModel.getTitle());
-                    }
+                if (node == getAllNode()) {
+                    setIcon(icon("/icons/ui/root.svg", 16, 16));
+                } else if (node == getUngroupedNode()) {
+                    setIcon(icon("/icons/ui/ungrouped.svg", 16, 16));
+                } else if (node.getUserObject() instanceof GroupModel groupModel) {
+                    var iconText = groupModel.getIcon() != null && !groupModel.getIcon().isEmpty() ? groupModel.getIcon() : null;
+                    var icon = iconText != null ? icon("/icons/app/" + iconText + ".svg", 16, 16) : null;
+                    setIcon(Objects.requireNonNullElse(icon, icon("/icons/ui/groups.svg")));
+                    setText(groupModel.getTitle());
                 }
                 return c;
             }
@@ -77,8 +77,19 @@ public class GroupsTree extends DnDTree {
         return null;
     }
 
-    public boolean isUngroupedNodeSelected() {
+/*    public boolean isUngroupedNodeSelected() {
         return getSelectedTreeNode() == getUngroupedNode();
     }
 
+    public boolean isAllNodeSelected() {
+        return getSelectedTreeNode() == getAllNode();
+    }*/
+
+    public boolean isUngroupedNode(DefaultMutableTreeNode node) {
+        return node == getUngroupedNode();
+    }
+
+    public boolean isAllNode(DefaultMutableTreeNode node) {
+        return node == getAllNode();
+    }
 }

@@ -22,6 +22,7 @@ public class DnDTree extends JTree {
 
     // Special nodes are tracked by reference. Re-mark them if you rebuild with new node instances.
     private final Set<DefaultMutableTreeNode> specialNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+
     @Setter
     private ExternalDropHandler externalDropHandler;
 
@@ -30,7 +31,7 @@ public class DnDTree extends JTree {
 
     public DnDTree(String rootLabel) {
         super(new DefaultTreeModel(new DefaultMutableTreeNode(rootLabel != null ? rootLabel : "Root")));
-        setRootVisible(true);
+        setRootVisible(false);
         setShowsRootHandles(true);
         setDragEnabled(true);
         setDropMode(DropMode.ON_OR_INSERT);
@@ -78,7 +79,7 @@ public class DnDTree extends JTree {
      * Adds a special node under root and returns it.
      */
     public DefaultMutableTreeNode addSpecialNodeUnderRoot(String label) {
-        DefaultMutableTreeNode n = new DefaultMutableTreeNode(label != null ? label : "Special");
+        DefaultMutableTreeNode n = new DefaultMutableTreeNode(label);
         model().insertNodeInto(n, root(), root().getChildCount());
         addSpecialNode(n);
         return n;

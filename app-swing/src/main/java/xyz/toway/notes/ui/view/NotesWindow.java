@@ -200,13 +200,13 @@ public class NotesWindow extends ToolWindow implements INotesView {
         if (selectedNode == null) return;
 
         // all
-        if (selectedNode.isRoot()) {
+        if (groupsTree.isAllNode(selectedNode)) {
             presenter.loadAllNotes();
             return;
         }
 
         // no group
-        if (groupsTree.isUngroupedNodeSelected()) {
+        if (groupsTree.isUngroupedNode(selectedNode)) {
             presenter.loadOrphanNotes();
             return;
         }

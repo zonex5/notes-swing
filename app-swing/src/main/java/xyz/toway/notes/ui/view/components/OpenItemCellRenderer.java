@@ -52,26 +52,46 @@ public class OpenItemCellRenderer extends JPanel implements ListCellRenderer<Con
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends ContentModel> list, ContentModel value, int index, boolean isSelected, boolean cellHasFocus) {
-        var title = Objects.requireNonNullElse(value.getTitle(), "<Untitled>");
+    public Component getListCellRendererComponent(
+            JList<? extends ContentModel> list,
+            ContentModel value,
+            int index,
+            boolean isSelected,
+            boolean cellHasFocus
+    ) {
+        String title = Objects.requireNonNullElse(value.getTitle(), "<Untitled>");
 
-        JLabel lafLabel = (JLabel) base.getListCellRendererComponent(list, title, index, isSelected, cellHasFocus);
-        setBackground(lafLabel.getBackground());
-        titleLabel.setForeground(lafLabel.getForeground());
+        // Apply background/foreground to cell panel
+        setBackground(list.getBackground());
+        setForeground(list.getForeground());
 
+        if (isSelected) {
+            setBackground(new Color(0xCCE8FF));
+            setForeground(Color.BLACK);
+        }
+
+        // Title uses main foreground
+        titleLabel.setForeground(list.getForeground());
+
+        // Secondary text: use main foreground when selected, "disabled" when not
         Color secondary = UIManager.getColor("Label.disabledForeground");
-        subtitleLabel.setForeground(secondary);
+        Color secondaryFg = isSelected ? list.getForeground() : secondary;
+        subtitleLabel.setForeground(secondaryFg);
+        dateLabel.setForeground(secondaryFg);
 
         iconLabel.setIcon(icon("/icons/ui/note.svg", 18, 20));
         titleLabel.setText(title);
         subtitleLabel.setText(value.getContentPreview());
 
-        var date = value.getCreatedAt() != null ? DATE_FORMAT.format(value.getCreatedAt()) : "";
+        String date = value.getCreatedAt() != null
+                ? DATE_FORMAT.format(value.getCreatedAt())
+                : "";
         dateLabel.setText(date);
 
-        // store model in client property
-        this.putClientProperty("model", value);
+        // Store model in client property
+        putClientProperty("model", value);
 
         return this;
     }
+
 }
