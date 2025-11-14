@@ -5,6 +5,7 @@ import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.view.INotesView;
 
 import java.util.Collection;
+import java.util.Set;
 
 import static xyz.toway.notes.ui.Main.context;
 
@@ -71,6 +72,13 @@ public class NotesPresenter implements INotesPresenter<GroupModel> {
     public void deleteGroup(GroupModel group) {
         context.getNoteService()
                 .deleteGroup(group)
+                .thenAccept(model -> view.refresh());
+    }
+
+    @Override
+    public void deleteGroups(Set<String> ids) {
+        context.getNoteService()
+                .deleteGroups(ids)
                 .thenAccept(model -> view.refresh());
     }
 

@@ -12,11 +12,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -115,8 +113,15 @@ public class NoteService {
 
     public CompletableFuture<Void> deleteGroup(GroupModel group) {
         return CompletableFuture.runAsync(() -> {
-            groupRepository.update(group);
-            noteRepository.deleteAllByGroupId(group.getParentId());
+            groupRepository.delete(group.getId());
+            noteRepository.deleteAllByGroupId(group.getId());
+        });
+    }
+
+    public CompletionStage<Void> deleteGroups(Set<String> ids) {
+        return CompletableFuture.runAsync(() -> {
+            groupRepository.delete(ids);
+            noteRepository.deleteAllByGroupId(ids);
         });
     }
 

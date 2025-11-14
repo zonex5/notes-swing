@@ -5,6 +5,7 @@ import xyz.toway.notes.domain.model.GroupModel;
 import xyz.toway.notes.ui.view.INotesView;
 
 import java.util.Collection;
+import java.util.Set;
 
 public interface INotesPresenter<T> extends GeneralPresenter<INotesView> {
 
@@ -25,4 +26,6 @@ public interface INotesPresenter<T> extends GeneralPresenter<INotesView> {
     void saveGroup(GroupModel group);
 
     void deleteGroup(GroupModel group);
+
+    void deleteGroups(Set<String> ids);
 }

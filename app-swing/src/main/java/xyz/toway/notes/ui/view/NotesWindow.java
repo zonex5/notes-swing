@@ -26,9 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static xyz.toway.notes.ui.Main.icon;
 
@@ -75,7 +72,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
         menuBar.add(Box.createHorizontalGlue());
 
         // create toolbar buttons
-        JButton refreshButton = createButton("Refresh list", "/icons/ui/refresh.svg", this::loadGroups);
+        JButton refreshButton = createButton("Refresh list", "/icons/ui/refresh.svg", this::refresh);
         JButton renameButton = createButton("Rename note", "/icons/ui/doc-edit.svg", this::renameSelectedNote);
         JButton deleteButton = createButton("Delete note", "/icons/ui/delete.svg", this::deleteSelectedNote);
 
@@ -115,33 +112,33 @@ public class NotesWindow extends ToolWindow implements INotesView {
         bottomPanel.setPreferredSize(new Dimension(0, 20));
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        loadGroups();
+        refresh();
 
         return panel;
     }
 
     @Override
     public void setNotes(List<ContentModel> notes) {
-        model.clear();
-        model.addAll(notes);
-        noteList.repaint();
+        SwingUtilities.invokeLater(() -> {
+            model.clear();
+            model.addAll(notes);
+            noteList.repaint();
+        });
     }
 
     @Override
     public void setGroups(List<GroupModel> groups) {
-        groupsTree.rebuild(groups);
-        if (groupsTree.getSelectionPath() == null) {
-            groupsTree.setSelectionRow(0);
-        }
+        SwingUtilities.invokeLater(() -> {
+            groupsTree.rebuild(groups);
+            if (groupsTree.getSelectionPath() == null) {
+                groupsTree.setSelectionRow(0);
+            }
+        });
     }
 
     @Override
     public void refresh() {
-        loadGroups();
-    }
-
-    private void loadGroups() {
-        presenter.loadGroups();
+        SwingUtilities.invokeLater(() -> presenter.loadGroups());
     }
 
     private JPanel createGroupsPanel() {
@@ -228,7 +225,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
     }
 
     private void renameGroup() {
-        var group = getActionGroup();
+        var group = getSelectedGroup();
         if (group == null) {
             return;
         }
@@ -240,7 +237,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
     }
 
     private void deleteGroup() {
-        var group = getActionGroup();
+        var group = getSelectedGroup();
         if (group == null) {
             return;
         }
@@ -252,7 +249,8 @@ public class NotesWindow extends ToolWindow implements INotesView {
                 JOptionPane.WARNING_MESSAGE
         );
         if (result == JOptionPane.YES_OPTION) {
-            presenter.deleteGroup(group);
+            var ids = collectGroupIdsFromSelected();
+            presenter.deleteGroups(ids);
         }
     }
 
@@ -292,7 +290,7 @@ public class NotesWindow extends ToolWindow implements INotesView {
         return null;
     }
 
-    private GroupModel getActionGroup() {
+    private GroupModel getSelectedGroup() {
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) groupsTree.getLastSelectedPathComponent();
         if (selectedNode != null && selectedNode.getUserObject() instanceof GroupModel group) {
             return group;
@@ -362,6 +360,14 @@ public class NotesWindow extends ToolWindow implements INotesView {
                 collectGroupIds(childNode, ids);
             }
         }
+    }
+
+    private Set<String> collectGroupIdsFromSelected() {
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) groupsTree.getLastSelectedPathComponent();
+        if (selectedNode == null) {
+            return new HashSet<>();
+        }
+        return collectGroupIds(selectedNode);
     }
 
     private final class NoteToGroupDropHandler implements DnDTree.ExternalDropHandler {

@@ -76,4 +76,9 @@ public class NtGroupRepository implements GroupRepository {
                         .getRepository(GroupEntity.class)
         );
     }
+
+    @Override
+    public void delete(Set<String> ids) {
+        getRepository().remove(where("id").in(ids.toArray(new String[0])));
+    }
 }
