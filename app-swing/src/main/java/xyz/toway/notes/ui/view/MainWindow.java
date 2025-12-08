@@ -81,7 +81,7 @@ public class MainWindow extends JFrame implements GeneralView {
 
         // create tray icon
         PopupMenu popup = new PopupMenu();
-        MenuItem openItem = new MenuItem("Open");
+        MenuItem openItem = new MenuItem("Open (Ctrl + Shift + F1)");
         openItem.addActionListener(e -> setVisible(true));
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.addActionListener(e -> closeWindow());
@@ -289,10 +289,6 @@ public class MainWindow extends JFrame implements GeneralView {
         optionsMenu.add(minimizeItem);
         menuItems.put(MINIMIZE_ON_CLOSE, minimizeItem);
 
-        //JCheckBoxMenuItem defaultTabItem = new JCheckBoxMenuItem("Add new tab (todo)");
-        //optionsMenu.add(defaultTabItem);
-        //menuItems.put(OPEN_DEFAULT_NOTE, defaultTabItem);
-
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(getToolbar());
 
@@ -304,9 +300,6 @@ public class MainWindow extends JFrame implements GeneralView {
         restoreItem.addActionListener(e -> {
             presenter.saveSettingsFlag(RESTORE_LAST_SESSION, restoreItem.isSelected());
         });
-        /*defaultTabItem.addActionListener(e -> {
-            presenter.saveSettingsFlag(OPEN_DEFAULT_NOTE, defaultTabItem.isSelected());
-        });*/
         minimizeItem.addActionListener(e -> {
             presenter.saveSettingsFlag(MINIMIZE_ON_CLOSE, minimizeItem.isSelected());
             minimizeOnClose = minimizeItem.isSelected();
@@ -368,6 +361,13 @@ public class MainWindow extends JFrame implements GeneralView {
             saveOpenTabs();
             closeAllTabs();
             File selectedFile = fileChooser.getSelectedFile();
+
+            // Add extension ".notes" if missing
+            // Check whether file name already ends with ".notes" (case-insensitive)
+            if (!selectedFile.getName().toLowerCase().endsWith(".notes")) {
+                selectedFile = new File(selectedFile.getParentFile(), selectedFile.getName() + ".notes");
+            }
+
             presenter.createNewFile(selectedFile.getAbsolutePath());
             openDocument(null);
         }
@@ -445,7 +445,6 @@ public class MainWindow extends JFrame implements GeneralView {
         menuItems.get(STATUS_BAR_VISIBLE).setSelected(settings.statusBarVisible());
         menuItems.get(MINIMIZE_ON_CLOSE).setSelected(settings.minimizeOnClose());
         menuItems.get(RESTORE_LAST_SESSION).setSelected(settings.restoreLastSession());
-        //menuItems.get(OPEN_DEFAULT_NOTE).setSelected(false); // todo settings.defaultTab()
 
         minimizeOnClose = settings.minimizeOnClose();
     }

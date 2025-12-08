@@ -33,6 +33,7 @@ public class TextNoteTab extends JPanel {
         textArea.setCloseCurlyBraces(true);
         textArea.setAnimateBracketMatching(true);
         textArea.setAutoIndentEnabled(true);
+        textArea.setLineWrap(true); //todo import from settings
         textArea.setCurrentLineHighlightColor(new Color(255, 251, 226));
 
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
